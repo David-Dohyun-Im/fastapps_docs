@@ -32,9 +32,9 @@ export function TableAnchor({ tocs }: TableAnchorProps) {
       <h3 className="text-sm font-semibold">On this page</h3>
       <ScrollArea className="pt-0.5 pb-4">
         <div className="text-foreground flex flex-col gap-2.5 text-sm">
-          {tocs.map(({ href, level, text }) => (
+          {tocs.map(({ href, level, text }, index) => (
             <Link
-              key={href}
+              key={`${href}-${index}`}
               href={href}
               title={text}
               aria-label={text}

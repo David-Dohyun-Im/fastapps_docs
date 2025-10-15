@@ -1,57 +1,181 @@
 ---
 title: Introduction to FastApps
-description: Understand what FastApps is, why it exists, and how it upgrades ChatGPT development.
+description: Understand what FastApps is, why it exists, and how it upgrades ChatGPT apps development.
 ---
 
-Welcome to FastApps - a zero-boilerplate framework for building interactive ChatGPT widgets!
+Welcome to FastApps - a zero-boilerplate framework for building interactive ChatGPT apps powered by Apps SDK and FastMCP!
 
-## What is FastApps?
+## Overview
 
-FastApps is a Python framework that lets you build interactive, visual widgets for ChatGPT with minimal code. Instead of text-only responses, you can create rich, interactive UIs that run directly in ChatGPT.
+FastApps is a Python framework that eliminates the complexity of building Apps in ChatGPT. It handles all the MCP protocol boilerplate, auto-discovery, and build configuration so you can focus on writing your widget logic and UI.
 
-## Why FastApps?
+## The Problem
 
-### Traditional ChatGPT Development
-```python
-# Just text responses
-def my_tool():
-    return "Here's the weather: 72°F, Sunny"
+OpenAI's Apps SDK lets you build rich, interactive widgets for ChatGPT using the Model Context Protocol (MCP). But the manual setup is extensive:
+
+### Raw Apps SDK
+```typescript
+// 1. Manually register HTML resources with specific mime types
+server.registerResource(
+  "widget-html",
+  "ui://widget/my-widget.html",
+  {},
+  async () => ({
+    contents: [{
+      uri: "ui://widget/my-widget.html",
+      mimeType: "text/html+skybridge",  // Must be exact
+      text: `
+        <div id="root"></div>
+        <style>${CSS}</style>
+        <script type="module">${JS}</script>
+      `,
+      _meta: {
+        "openai/widgetCSP": {
+          connect_domains: [],
+          resource_domains: []
+        }
+      }
+    }]
+  })
+);
+
+// 2. Manually wire tool metadata to resource URIs
+server.registerTool(
+  "my-widget",
+  {
+    title: "My Widget",
+    inputSchema: { /* ... */ },
+    _meta: {
+      "openai/outputTemplate": "ui://widget/my-widget.html",
+      "openai/widgetAccessible": true,
+      "openai/toolInvocation/invoking": "Loading...",
+      "openai/toolInvocation/invoked": "Done"
+    }
+  },
+  async (input) => {
+    return {
+      content: [{ type: "text", text: "Success" }],
+      structuredContent: { /* data */ }
+    };
+  }
+);
+
+// 3. Manually build and bundle assets
+// 4. Manually inject component mounting logic
+// 5. Manually configure CSP policies
+// 6. Manually set up server with proper protocol handlers
 ```
 
-### With FastApps
+**That's a lot of boilerplate for every widget you build.**
+
+## The Solution
+
+With FastApps, you write **just 2 files**:
+
+### Python Tool
 ```python
-# Rich, interactive widgets
-def my_tool():
-    return Widget(
-        title="Weather Widget",
-        data={
-            "temperature": 72,
-            "conditions": "Sunny",
-        },
-    )
+class MyWidgetTool(BaseWidget):
+    identifier = "my-widget"
+    title = "My Widget"
+    
+    async def execute(self, input_data):
+        return {"message": "Hello World!"}
 ```
 
-## Key Benefits
+### React Component
+```jsx
+export default function MyWidget() {
+  const props = useWidgetProps();
+  return <h1>{props.message}</h1>;
+}
+```
 
-- Create production-quality UI widgets with minimal setup
-- Keep Python business logic and React presentation in sync
-- Support interactive states, forms, and live updates
-- Build demos and tools that feel native to ChatGPT
+**That's it! FastApps automatically handles all the boilerplate:**
+- ✅ MCP server setup and protocol implementation
+- ✅ Tool and resource registration with proper mime types
+- ✅ Metadata wiring and CSP configuration
+- ✅ Asset building with Vite and component mounting
+- ✅ Auto-discovery from your project structure
 
-## Why Widgets Matter
+## Architecture
 
-Traditional ChatGPT tools answer with text. FastApps widgets add visual structure, controls, and interactivity that help users take action faster. Whether you're building dashboards, data explorers, or guided workflows, widgets give you the UI you need without leaving ChatGPT.
+```
+┌─────────────────────────────────────────┐
+│           ChatGPT Interface             │
+└─────────────────┬───────────────────────┘
+                  │ MCP Protocol
+                  ▼
+┌─────────────────────────────────────────┐
+│         FastApps Framework                │
+├─────────────────────────────────────────┤
+│  Python Backend (Your Tool)             │
+│  ├── Input validation (Pydantic)        │
+│  ├── Business logic                     │
+│  └── Data preparation                   │
+└─────────────────┬───────────────────────┘
+                  │ Props
+                  ▼
+┌─────────────────────────────────────────┐
+│  React Frontend (Your Component)        │
+│  ├── useWidgetProps() - Get data        │
+│  ├── useWidgetState() - Manage state    │
+│  └── Render UI                          │
+└─────────────────────────────────────────┘
+```
 
-## How FastApps Works
+## How It Works
 
-1. **Python Tool** — Handles inputs, business logic, and data fetching.
-2. **React Widget** — Renders the UI, receives data from Python, and handles user interaction.
-3. **FastApps Runtime** — Connects the two, synchronizes state, and delivers the widget through ChatGPT.
+### Structure
+Every widget has two parts:
+- **Python Tool** - Backend logic with Pydantic validation
+- **React Component** - Frontend UI with type-safe props
 
-## What's Next?
+### Auto-Discovery
+Drop a file in `server/tools/` and FastApps automatically:
+1. Discovers all `BaseWidget` subclasses
+2. Registers them as MCP tools with proper metadata
+3. Creates HTML resources and wires everything together
+4. Links to React components in `widgets/` folder
 
-- Follow the Quick Start to get a widget running in minutes.
-- Explore the Project Setup guide to understand the file structure.
-- Dive into Widgets, Tools, State, Styling, and API guides for deeper knowledge.
+### Workflow
+```bash
+fastapps create mywidget     # It create the files of tool + component
+# Edit server/tools/mywidget_tool.py
+# Edit widgets/mywidget/index.jsx
+npm run build && python server/main.py
+```
 
-FastApps brings modern app patterns to AI-driven conversations. You're about to build experiences that feel magical inside ChatGPT.
+
+## Comparison
+
+| Aspect | Raw Apps SDK | FastApps |
+|--------|--------------|----------|
+| **Setup** | Manual server config, protocol handlers | Auto-configured |
+| **Registration** | Manual tools + resources + metadata | Auto-discovered |
+| **Asset Bundling** | Custom build scripts | Built-in Vite |
+| **Files per Widget** | 5+ files | **2 files** |
+| **Boilerplate Lines** | ~150+ lines | **~0 lines** |
+
+## Stack & API
+
+**Backend**: Python + FastMCP + Pydantic  
+**Frontend**: React + Vite + TypeScript  
+**Protocol**: Model Context Protocol (MCP)
+
+**Core API**:
+- `BaseWidget` - Base class for all tools
+- `useWidgetProps()` / `useWidgetState()` / `useOpenAiGlobal()` - React hooks
+- `fastapps init` / `fastapps create` - CLI commands
+
+**Convention over Configuration** - Zero config files, predictable structure, clear validation errors
+
+## Requirements
+
+- Python 3.11+
+- Node.js 18+
+
+---
+
+> **"You should write your widget logic and UI, not MCP boilerplate."**
+
+**Ready to get started?** → [Quick Start Guide](./quickstart)

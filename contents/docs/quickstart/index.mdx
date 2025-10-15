@@ -7,7 +7,7 @@ Get your first ChatGPT widget running in 5 minutes!
 
 ## 📁 What Gets Created
 
-When you run `fastapps create greeting`, this structure is generated:
+When you run `fastapps create my-widget`, this structure is generated:
 
 ```
 my-widgets/
@@ -16,10 +16,10 @@ my-widgets/
 │   ├── main.py                  # Auto-discovery server (pre-configured)
 │   └── tools/
 │       ├── __init__.py          # Empty file
-│       └── greeting_tool.py     # ← YOUR CODE: Widget backend
+│       └── my_widget_tool.py    # ← YOUR CODE: Widget backend
 │
 ├── widgets/
-│   └── greeting/
+│   └── my-widget/
 │       └── index.jsx            # ← YOUR CODE: Widget frontend
 │
 ├── requirements.txt
@@ -30,7 +30,7 @@ my-widgets/
 
 ```bash
 pip install fastapps
-fastapps create greeting
+fastapps create my-widget
 ```
 
 - Installs dependencies
@@ -38,29 +38,98 @@ fastapps create greeting
 - Generates a React widget in `widgets/`
 - Wires everything into the FastApps runtime
 
-## ▶️ Run the Development Server
+## ✏️ Edit Your Widget Code
+
+You only need to edit these 2 files:
+
+### `server/tools/my_widget_tool.py` - Backend Logic
+```python
+from fastapps import BaseWidget, Field, ConfigDict
+from pydantic import BaseModel
+from typing import Dict, Any
+
+class MyWidgetInput(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    name: str = Field(default="World")
+
+class MyWidgetTool(BaseWidget):
+    identifier = "my-widget"
+    title = "My Widget"
+    input_schema = MyWidgetInput
+    invoking = "Processing..."
+    invoked = "Done!"
+    
+    widget_csp = {
+        "connect_domains": [],      # APIs you'll call
+        "resource_domains": []      # Images/fonts you'll use
+    }
+    
+    async def execute(self, input_data: MyWidgetInput) -> Dict[str, Any]:
+        # Your logic here
+        return {
+            "name": input_data.name,
+            "message": f"Hello, {input_data.name}!"
+        }
+```
+
+### `widgets/my-widget/index.jsx` - Frontend UI
+```jsx
+import React from 'react';
+import { useWidgetProps } from 'chatjs-hooks';
+
+export default function MyWidget() {
+  const props = useWidgetProps();
+  
+  return (
+    <div style={{
+      padding: '40px',
+      textAlign: 'center',
+      background: '#4A90E2',
+      color: 'white',
+      borderRadius: '12px'
+    }}>
+      <h1>{props.message}</h1>
+      <p>Welcome, {props.name}!</p>
+    </div>
+  );
+}
+```
+
+That's it! These are the only files you need to write.
+
+## 🔨 Build and Run
 
 ```bash
-fastapps dev
+# Build
+npm run build
+
+# Start server
+python server/main.py
 ```
 
-- Starts the FastApps dev server
-- Hot reloads your Python and React code
-- Opens the preview in ChatGPT-compatible mode
+Your widget is now live at `http://localhost:8001`
 
-## 🧪 Test the Widget
+## 🌐 Expose with ngrok (for ChatGPT Testing)
 
-Call your widget from Python:
+To test your widget in ChatGPT, you need to expose your local server to the internet using ngrok:
 
-```python
-from fastapps import FastApps
+```bash
+# Install ngrok (if not already installed)
+# macOS: brew install ngrok
+# Windows: choco install ngrok  (or scoop install ngrok)
+# Or download from: https://ngrok.com/download
 
-client = FastApps()
-response = client.call("greeting", name="Ada")
-print(response)
+# In a new terminal, expose your local server
+ngrok http 8001
 ```
 
-The widget renders inside ChatGPT with the provided data.
+You will get a public URL that you can use to add your local server to ChatGPT in **Settings > Connectors**.
+
+For example: `https://<custom_endpoint>.ngrok-free.app/mcp`
+
+**Important**: Keep both terminals running:
+- **Terminal 1**: `python server/main.py` (your FastApps server)
+- **Terminal 2**: `ngrok http 8001` (public tunnel)
 
 ## ✅ Ready for Next Steps
 
