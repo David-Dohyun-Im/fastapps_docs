@@ -147,9 +147,6 @@ importers:
       eslint-config-next:
         specifier: ^15.5.4
         version: 15.5.4(eslint@9.36.0(jiti@2.6.1))(typescript@5.9.3)
-      husky:
-        specifier: ^9.1.7
-        version: 9.1.7
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
@@ -2243,11 +2240,6 @@ packages:
 
   hastscript@9.0.1:
     resolution: {integrity: sha512-g7df9rMFX/SPi34tyGCyUBREQoKkapwdY/T04Qn9TDWfHhAYt4/I0gMVirzK5wEzeUqIjEB+LXC/ypb7Aqno5w==}
-
-  husky@9.1.7:
-    resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
-    engines: {node: '>=18'}
-    hasBin: true
 
   iconv-lite@0.6.3:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
@@ -5968,8 +5960,6 @@ snapshots:
       hast-util-parse-selector: 4.0.0
       property-information: 7.1.0
       space-separated-tokens: 2.0.2
-
-  husky@9.1.7: {}
 
   iconv-lite@0.6.3:
     dependencies:
