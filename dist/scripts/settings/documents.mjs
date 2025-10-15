@@ -1,97 +1,55 @@
 export const Documents = [
     {
-        heading: "Introduction",
-        title: "Basic Setup",
-        href: "/basic-setup",
-        items: [
-            {
-                title: "Installation",
-                href: "/installation",
-            },
-            {
-                title: "Setup",
-                href: "/setup",
-            },
-            {
-                title: "Changelog",
-                href: "/changelog",
-            },
-        ],
+        heading: "Overview",
+        title: "Introduction",
+        href: "/introduction",
     },
     {
         spacer: true,
     },
     {
-        title: "Navigation",
-        href: "/navigation",
-        heading: "Documents",
+        heading: "Getting Started",
+        title: "Quick Start",
+        href: "/quickstart",
     },
     {
-        title: "Structure",
-        href: "/structure",
-        items: [
-            {
-                title: "Deep",
-                href: "/deep",
-                items: [
-                    {
-                        title: "Deeper",
-                        href: "/deeper",
-                        items: [
-                            {
-                                title: "Even deeper",
-                                href: "/even-deeper",
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
+        title: "Tutorial",
+        href: "/tutorial",
     },
     {
         spacer: true,
     },
     {
-        title: "Markdown",
-        href: "/markdown",
-        heading: "Components",
-        items: [
-            {
-                title: "Cards",
-                href: "/cards",
-            },
-            {
-                title: "Diagrams",
-                href: "/diagrams",
-            },
-            {
-                title: "Filetree",
-                href: "/filetree",
-            },
-            {
-                title: "Lists",
-                href: "/lists",
-            },
-            {
-                title: "Maths",
-                href: "/maths",
-            },
-            {
-                title: "Notes",
-                href: "/notes",
-            },
-            {
-                title: "Steps",
-                href: "/steps",
-            },
-            {
-                title: "Table",
-                href: "/table",
-            },
-            {
-                title: "Tabs",
-                href: "/tabs",
-            },
-        ],
+        heading: "Build",
+        title: "Project Setup",
+        href: "/project-setup",
+    },
+    {
+        title: "Building Widgets",
+        href: "/widgets",
+    },
+    {
+        title: "Building Tools",
+        href: "/tools",
+    },
+    {
+        spacer: true,
+    },
+    {
+        heading: "Advanced",
+        title: "Managing State",
+        href: "/state",
+    },
+    {
+        title: "Styling Guide",
+        href: "/styling",
+    },
+    {
+        title: "API Integration",
+        href: "/api-integration",
+    },
+    {
+        title: "API Reference",
+        href: "/api-reference",
     },
 ];
