@@ -1,16 +1,26 @@
 import { promises as fs } from "fs"
 import path from "path"
 
-import { Documents } from "@/settings/documents"
+import { Documents } from "../settings/documents.ts"
 import grayMatter from "gray-matter"
 import remarkMdx from "remark-mdx"
 import remarkParse from "remark-parse"
 import remarkStringify from "remark-stringify"
 import { unified } from "unified"
-import { Node, Parent } from "unist"
+import type { Node, Parent } from "unist"
 import { visit } from "unist-util-visit"
 
-import { Paths } from "@/lib/pageroutes"
+type Paths =
+  | {
+      title: string
+      href: string
+      noLink?: true
+      heading?: string
+      items?: Paths[]
+    }
+  | {
+      spacer: true
+    }
 
 const docsDir = path.join(process.cwd(), "contents/docs")
 const outputDir = path.join(process.cwd(), "public", "search-data")

@@ -1,0 +1,69 @@
+---
+title: FastApps Quick Start
+description: Spin up your first FastApps project and run a widget in under five minutes.
+---
+
+Get your first ChatGPT widget running in 5 minutes!
+
+## 📁 What Gets Created
+
+When you run `fastapps create greeting`, this structure is generated:
+
+```
+my-widgets/
+├── server/
+│   ├── __init__.py              # Empty file
+│   ├── main.py                  # Auto-discovery server (pre-configured)
+│   └── tools/
+│       ├── __init__.py          # Empty file
+│       └── greeting_tool.py     # ← YOUR CODE: Widget backend
+│
+├── widgets/
+│   └── greeting/
+│       └── index.jsx            # ← YOUR CODE: Widget frontend
+│
+├── requirements.txt
+└── package.json
+```
+
+## 🚀 Create Your First Widget
+
+```bash
+pip install fastapps
+fastapps create greeting
+```
+
+- Installs dependencies
+- Creates a Python tool in `server/tools/`
+- Generates a React widget in `widgets/`
+- Wires everything into the FastApps runtime
+
+## ▶️ Run the Development Server
+
+```bash
+fastapps dev
+```
+
+- Starts the FastApps dev server
+- Hot reloads your Python and React code
+- Opens the preview in ChatGPT-compatible mode
+
+## 🧪 Test the Widget
+
+Call your widget from Python:
+
+```python
+from fastapps import FastApps
+
+client = FastApps()
+response = client.call("greeting", name="Ada")
+print(response)
+```
+
+The widget renders inside ChatGPT with the provided data.
+
+## ✅ Ready for Next Steps
+
+- Follow the Tutorial for a guided build
+- Explore Widgets and Tools to customize logic and UI
+- Connect APIs or state management when you need more power

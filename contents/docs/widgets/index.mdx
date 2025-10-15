@@ -1,0 +1,116 @@
+---
+title: Building Widgets
+description: Create interactive React components that render FastApps data inside ChatGPT.
+---
+
+Learn how to create beautiful, interactive React components for your ChatGPT widgets.
+
+## What is a Widget?
+
+A widget is a React component that:
+- Lives in `widgets/<widget-name>/index.jsx`
+- Receives props from your Python tool
+- Renders in the ChatGPT interface
+- Can be interactive and stateful
+
+## Basic Widget Structure
+
+```jsx
+import React from "react";
+import { useWidgetProps } from "chatjs-hooks";
+
+export default function MyWidget() {
+  // 1. Get data from Python backend
+  const props = useWidgetProps();
+
+  // 2. Render UI based on props
+  return (
+    <div style={{ padding: "1rem" }}>
+      <h2>{props.title}</h2>
+      <p>{props.description}</p>
+    </div>
+  );
+}
+```
+
+## Pattern: Lists
+
+```jsx
+export default function PizzaList() {
+  const { pizzas } = useWidgetProps();
+
+  return (
+    <ul>
+      {pizzas.map((pizza) => (
+        <li key={pizza.name}>
+          <strong>{pizza.name}</strong> — {pizza.style}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## Pattern: User Input
+
+```jsx
+import { useWidgetState } from "chatjs-hooks";
+
+export default function TodoWidget() {
+  const [todos, setTodos] = useWidgetState("todos", []);
+  const [text, setText] = useWidgetState("text", "");
+
+  return (
+    <div>
+      <input
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        placeholder="Add a task"
+      />
+      <button
+        onClick={() => {
+          setTodos([...todos, text]);
+          setText("");
+        }}
+      >
+        Add
+      </button>
+      <ul>
+        {todos.map((todo) => (
+          <li key={todo}>{todo}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+## Pattern: Conditional UI
+
+```jsx
+export default function WeatherWidget() {
+  const { loading, weather } = useWidgetProps();
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!weather) {
+    return <p>No forecast available.</p>;
+  }
+
+  return (
+    <div>
+      <h2>{weather.city}</h2>
+      <p>{weather.summary}</p>
+    </div>
+  );
+}
+```
+
+## Tips
+
+- Keep components pure and deterministic
+- Use inline styles for fast iteration
+- Extract helpers into `widgets/shared/` if you reuse UI
+- Handle loading and empty states explicitly

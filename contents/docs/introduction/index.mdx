@@ -1,0 +1,57 @@
+---
+title: Introduction to FastApps
+description: Understand what FastApps is, why it exists, and how it upgrades ChatGPT development.
+---
+
+Welcome to FastApps - a zero-boilerplate framework for building interactive ChatGPT widgets!
+
+## What is FastApps?
+
+FastApps is a Python framework that lets you build interactive, visual widgets for ChatGPT with minimal code. Instead of text-only responses, you can create rich, interactive UIs that run directly in ChatGPT.
+
+## Why FastApps?
+
+### Traditional ChatGPT Development
+```python
+# Just text responses
+def my_tool():
+    return "Here's the weather: 72°F, Sunny"
+```
+
+### With FastApps
+```python
+# Rich, interactive widgets
+def my_tool():
+    return Widget(
+        title="Weather Widget",
+        data={
+            "temperature": 72,
+            "conditions": "Sunny",
+        },
+    )
+```
+
+## Key Benefits
+
+- Create production-quality UI widgets with minimal setup
+- Keep Python business logic and React presentation in sync
+- Support interactive states, forms, and live updates
+- Build demos and tools that feel native to ChatGPT
+
+## Why Widgets Matter
+
+Traditional ChatGPT tools answer with text. FastApps widgets add visual structure, controls, and interactivity that help users take action faster. Whether you're building dashboards, data explorers, or guided workflows, widgets give you the UI you need without leaving ChatGPT.
+
+## How FastApps Works
+
+1. **Python Tool** — Handles inputs, business logic, and data fetching.
+2. **React Widget** — Renders the UI, receives data from Python, and handles user interaction.
+3. **FastApps Runtime** — Connects the two, synchronizes state, and delivers the widget through ChatGPT.
+
+## What's Next?
+
+- Follow the Quick Start to get a widget running in minutes.
+- Explore the Project Setup guide to understand the file structure.
+- Dive into Widgets, Tools, State, Styling, and API guides for deeper knowledge.
+
+FastApps brings modern app patterns to AI-driven conversations. You're about to build experiences that feel magical inside ChatGPT.

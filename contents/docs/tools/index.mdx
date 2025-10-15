@@ -1,0 +1,73 @@
+---
+title: Building Tools
+description: Implement Python backends that power FastApps widgets and expose inputs to ChatGPT.
+---
+
+Learn how to create Python tools that power your ChatGPT widgets.
+
+## What is a Tool?
+
+A tool is a Python class that:
+- Lives in `server/tools/<widget>_tool.py`
+- Extends `BaseWidget`
+- Defines inputs with Pydantic
+- Implements widget logic in `execute()`
+
+## Basic Tool Structure
+
+```python
+from fastapps import BaseWidget, Field, ConfigDict
+from pydantic import BaseModel
+from typing import Dict, Any
+
+# 1. Define inputs
+class GreetingInput(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    name: str = Field(..., description="Person to greet")
+
+# 2. Implement tool
+class GreetingWidget(BaseWidget):
+    identifier = "greeting"
+    input_model = GreetingInput
+
+    def execute(self, inputs: GreetingInput) -> Dict[str, Any]:
+        return {"message": f"Hello {inputs.name}!"}
+```
+
+## Input Validation
+
+- Use `pydantic` models for automatic validation
+- Add descriptions to drive ChatGPT prompt suggestions
+- Provide defaults for optional fields
+
+## Accessing External Services
+
+```python
+import httpx
+
+class WeatherWidget(BaseWidget):
+    identifier = "weather"
+    input_model = WeatherInput
+
+    async def execute(self, inputs: WeatherInput) -> Dict[str, Any]:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.weatherapi.com/v1/current.json",
+                params={"q": inputs.city},
+            )
+        data = response.json()
+        return {"city": inputs.city, "forecast": data["current"]}
+```
+
+## Returning Data
+
+- Return dictionaries that match the props your widget expects
+- Stick to JSON-serializable data types
+- Provide friendly defaults (`[]`, `{}`, etc.) when data is missing
+
+## Best Practices
+
+- Keep business logic in the tool; keep widgets focused on presentation
+- Extract API clients or reusable logic into `server/api/`
+- Use async `execute` when calling network resources
+- Log errors and return safe fallbacks to the widget

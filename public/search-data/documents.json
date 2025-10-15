@@ -1,484 +1,376 @@
 [
   {
-    "slug": "/basic-setup/changelog",
-    "title": "Changelog",
-    "description": "Changelogs and improvements to the Documents projects.",
-    "content": "## Added\n\n**Linting and Formatting**:\n\n* Added `pnpm run lint` and `pnpm run lint:fix` scripts to automate linting tasks.\n* Added `pnpm run format` and `pnpm run format:check` scripts to ensure consistent code formatting.\n\n**SEO Enhancements**:\n\n* Added an SEO component to MDX pages to dynamically include `keywords` and `lastModified` metadata for improved SEO generation.\n\n## Updated\n\n**Next.js Upgrade**:\n\n* Upgraded the project from **Next.js 14** to **Next.js 15**, leveraging the latest features and performance improvements.\n\n**Codebase Improvements**:\n\n* Reordered imports across the project files for better consistency and readability.\n\n**Mermaid Component**:\n\n* Fixed an ID bug that caused rendering issues when multiple Mermaid diagrams were included in MDX pages.\n* Improved initialization and rendering logic to prevent duplicate diagram rendering.\n",
+    "slug": "/api-integration",
+    "title": "API Integration",
+    "description": "Connect FastApps widgets to external APIs from Python tools and display results in React.",
+    "content": "Learn how to integrate external APIs into your FastApps widgets.\n\n## Overview\n\nAPI integration happens in two places:\n\n1. **Python Tool** - Makes the API call, processes data\n2. **React Component** - Displays the data\n\n## Basic API Call\n\n### Python Tool\n\n```python\nimport httpx\nfrom fastapps import BaseWidget, Field, ConfigDict\nfrom pydantic import BaseModel\nfrom typing import Dict, Any\n\nclass WeatherInput(BaseModel):\n    model_config = ConfigDict(populate_by_name=True)\n    city: str = Field(..., description=\"City to fetch weather for\")\n\nclass WeatherWidget(BaseWidget):\n    identifier = \"weather\"\n    input_model = WeatherInput\n\n    async def execute(self, inputs: WeatherInput) -> Dict[str, Any]:\n        async with httpx.AsyncClient() as client:\n            response = await client.get(\n                \"https://api.weatherapi.com/v1/current.json\",\n                params={\"q\": inputs.city},\n            )\n        data = response.json()\n        return {\"city\": inputs.city, \"forecast\": data[\"current\"]}\n```\n\n### React Component\n\n```jsx\nimport React from \"react\";\nimport { useWidgetProps } from \"chatjs-hooks\";\n\nexport default function WeatherWidget() {\n  const { city, forecast } = useWidgetProps();\n\n  if (!forecast) {\n    return <p>Unable to load weather data.</p>;\n  }\n\n  return (\n    <div>\n      <h2>{city}</h2>\n      <p>{forecast.condition.text}</p>\n      <p>{forecast.temp_f}°F</p>\n    </div>\n  );\n}\n```\n\n## Handling Errors\n\n```python\ntry:\n    response.raise_for_status()\nexcept httpx.HTTPStatusError:\n    return {\"error\": \"Weather service unavailable\"}\n```\n\nOn the frontend:\n\n```jsx\nif (props.error) {\n  return <p>Sorry, try again later.</p>;\n}\n```\n\n## Authentication\n\n* Use environment variables for API keys\n* Load them in Python with `os.getenv`\n* Never expose secrets in the widget props\n\n## Rate Limits\n\n* Cache responses when possible\n* Debounce user-triggered fetches\n* Provide helpful fallback messages\n\n## Async vs Sync\n\n* Prefer async tools when calling APIs\n* For blocking libraries, run them in executors to keep FastApps responsive\n",
     "_searchMeta": {
-      "cleanContent": "added linting and formatting: added pnpm run lint and pnpm run lint:fix scripts to automate linting tasks added pnpm run format and pnpm run format:check scripts to ensure consistent code formatting seo enhancements: added an seo component to mdx pages to dynamically include keywords and lastmodified metadata for improved seo generation updated next js upgrade: upgraded the project from next js 14 to next js 15 leveraging the latest features and performance improvements codebase improvements: reordered imports across the project files for better consistency and readability mermaid component: fixed an id bug that caused rendering issues when multiple mermaid diagrams were included in mdx pages improved initialization and rendering logic to prevent duplicate diagram rendering",
+      "cleanContent": "learn how to integrate external apis into your fastapps widgets overview api integration happens in two places: python tool - makes the api call processes data react component - displays the data basic api call python tool react component handling errors on the frontend: authentication use environment variables for api keys load them in python with os getenv never expose secrets in the widget props rate limits cache responses when possible debounce user-triggered fetches provide helpful fallback messages async vs sync prefer async tools when calling apis for blocking libraries run them in executors to keep fastapps responsive",
       "headings": [
-        "Added",
-        "Updated"
+        "Overview",
+        "Basic API Call",
+        "Handling Errors",
+        "Authentication",
+        "Rate Limits",
+        "Async vs Sync"
       ],
       "keywords": [
-        "changelog",
-        "guide",
-        "nextjs",
-        "documents",
-        "Added",
-        "Updated",
-        "Linting and Formatting",
-        "SEO Enhancements",
-        "Next.js Upgrade",
-        "Next.js 14",
-        "Next.js 15",
-        "Codebase Improvements",
-        "Mermaid Component",
-        "pnpm run lint",
-        "pnpm run lint:fix",
-        "pnpm run format",
-        "pnpm run format:check",
-        "keywords",
-        "lastModified"
+        "Overview",
+        "Basic API Call",
+        "Handling Errors",
+        "Authentication",
+        "Rate Limits",
+        "Async vs Sync",
+        "Python Tool",
+        "React Component",
+        "python\nimport httpx\nfrom fastapps import BaseWidget, Field, ConfigDict\nfrom pydantic import BaseModel\nfrom typing import Dict, Any\n\nclass WeatherInput(BaseModel):\n    model_config = ConfigDict(populate_by_name=True)\n    city: str = Field(..., description=\"City to fetch weather for\")\n\nclass WeatherWidget(BaseWidget):\n    identifier = \"weather\"\n    input_model = WeatherInput\n\n    async def execute(self, inputs: WeatherInput) -> Dict[str, Any]:\n        async with httpx.AsyncClient() as client:\n            response = await client.get(\n                \"https://api.weatherapi.com/v1/current.json\",\n                params={\"q\": inputs.city},\n            )\n        data = response.json()\n        return {\"city\": inputs.city, \"forecast\": data[\"current\"]}",
+        "### React Component",
+        "jsx\nimport React from \"react\";\nimport { useWidgetProps } from \"chatjs-hooks\";\n\nexport default function WeatherWidget() {\n  const { city, forecast } = useWidgetProps();\n\n  if (!forecast) {\n    return <p>Unable to load weather data.</p>;\n  }\n\n  return (\n    <div>\n      <h2>{city}</h2>\n      <p>{forecast.condition.text}</p>\n      <p>{forecast.temp_f}°F</p>\n    </div>\n  );\n}",
+        "## Handling Errors",
+        "python\ntry:\n    response.raise_for_status()\nexcept httpx.HTTPStatusError:\n    return {\"error\": \"Weather service unavailable\"}",
+        "On the frontend:",
+        "jsx\nif (props.error) {\n  return <p>Sorry, try again later.</p>;\n}",
+        "## Authentication\n\n* Use environment variables for API keys\n* Load them in Python with"
       ]
     }
   },
   {
-    "slug": "/basic-setup",
-    "title": "Introduction",
-    "description": "This section provides an overview of how to get started with the Documents, Next.js Document Starter Kit.",
-    "content": "![Banner](/images/banner.png \"Documents\")\n\n## Documents\n\n**Documents** is a lightweight, modular starter kit built with **Next.js**, **React**, **Tailwind CSS**, and **TypeScript**. It’s designed to help you\nlaunch structured, professional documentation without spending time on boilerplate.\n\nWhether you're building product manuals, internal systems guides, or dev documentation, Documents gives you a clean foundation that’s easy to\nextend and maintain.\n\n## Why use Documents?\n\nThis kit was built to simplify how teams manage and publish documentation. It works across projects of all sizes—from a single\nreadme to enterprise knowledge bases.\n\nWith MDX, reusable components, and Tailwind styling, it keeps your workflow efficient without compromising flexibility.\n\nUse it for:\n\n* **Product Guides** – Setup, usage, and troubleshooting\n* **Internal Docs** – Processes, policies, and team references\n* **Technical Manuals** – APIs, SDKs, architecture walkthroughs\n\nCustomize the UI and structure to match your brand or workflow—no lock-in.\n\n## Core Features\n\n| Feature                              | Description                                                                 |\n| ------------------------------------ | --------------------------------------------------------------------------- |\n| **Write in Markdown/MDX**            | Combine Markdown with components and Mermaid.js for rich content.           |\n| **Flexible Navigation**              | Multi-level menus, page hierarchy, and auto-generated TOCs.                 |\n| **Code Support**                     | Syntax highlighting, code tabs, and one-click copy.                         |\n| **Search**                           | Fuzzy matching with highlight and instant results.                          |\n| **Responsive Design**                | Built-in light/dark mode with mobile support.                               |\n| **Math + Tables**                    | LaTeX rendering and clean table styling.                                    |\n| **SEO Defaults**                     | Preconfigured meta, Open Graph, and structured data.                        |\n| **AI Docs (Upcoming)**               | AI tools for smart search and content generation (coming soon).             |\n\n## Using This Kit\n\nNavigation is on the left. Pages flow from setup to advanced features, but you're free to jump around.\n\nUse the table of contents on the right to skip through sections.\n\nStart with the [Installation Guide](/docs/basic-setup/installation).\n\n## Community Support\n\nGot questions? Reach out via:\n\n* [GitHub](https://github.com/rubixvi/rubix-documents)\n* [Twitter](https://x.com/rubixstory)\n* [Facebook](https://www.facebook.com/rubixstudios)\n",
+    "slug": "/api-reference",
+    "title": "FastApps API Reference",
+    "description": "Reference documentation for the FastApps runtime, BaseWidget class, and helper utilities.",
+    "content": "Complete API documentation for the FastApps framework.\n\n## Core Classes\n\n### `BaseWidget`\n\nThe base class for all FastApps widgets.\n\n```python\nfrom fastapps import BaseWidget\n```\n\n#### Class Attributes\n\n**`identifier: str`** (required)\n\n* Unique widget identifier\n* Must match the widget folder name in `widgets/`\n* Example: `\"greeting\"` for `widgets/greeting/`\n\n**`input_model: Type[BaseModel]`**\n\n* Pydantic model describing tool inputs\n* Enables validation and type hints\n\n**`name: str | None`**\n\n* Human-friendly label shown in dashboards\n* Defaults to `identifier` when omitted\n\n#### Methods\n\n**`execute(self, inputs, ctx)`**\n\n* Main entry point for your tool\n* Return serializable data consumed by the widget\n\n**`async execute`**\n\n* Mark as `async` when you call network services\n* FastApps awaits the coroutine automatically\n\n## `FastApps` Client\n\n```python\nfrom fastapps import FastApps\n\napp = FastApps()\napp.register(GreetingWidget)\n```\n\n### Methods\n\n**`register(widget_cls)`**\n\n* Register a widget class manually\n* Useful when auto-discovery is disabled\n\n**`discover(path)`**\n\n* Recursively import modules and register widgets\n* Typical usage: `discover(\"server.tools\")`\n\n**`call(identifier, **kwargs)`**\n\n* Invoke a widget tool programmatically\n* Returns the JSON payload you send to the widget\n\n## Context Helpers\n\n### `WidgetContext`\n\nProvides access to:\n\n* `state`: persistence helpers (`get`, `set`, `delete`)\n* `logger`: structured logging for observability\n* `settings`: runtime configuration (API keys, env flags)\n\n### State Helpers\n\n```python\nawait ctx.state.get(\"count\", default=0)\nawait ctx.state.set(\"count\", 1)\nawait ctx.state.clear()\n```\n\n## Error Handling\n\n* Raise domain-specific exceptions; FastApps serializes the message\n* Use `ctx.logger.exception` to capture stack traces\n* Return fallback data so widgets can render graceful errors\n\n## CLI Commands\n\n```bash\nfastapps create <name>   # Scaffold a new widget\nfastapps dev             # Run dev server with hot reload\nfastapps build           # Bundle widget assets\n```\n\n* `fastapps deploy` integrates with Flick to publish widgets\n* Pass `--python` or `--node` to customize runtimes\n\n## Version Compatibility\n\n* FastApps Python SDK targets Python 3.9+\n* React widgets are built with React 18\n* ChatJS hooks provide the widget bridge (installed automatically)\n\nLeverage these APIs to integrate FastApps deeply into your workflows.\n",
     "_searchMeta": {
-      "cleanContent": "banner documents documents is a lightweight modular starter kit built with next js react tailwind css and typescript it s designed to help you launch structured professional documentation without spending time on boilerplate whether you re building product manuals internal systems guides or dev documentation documents gives you a clean foundation that s easy to extend and maintain why use documents this kit was built to simplify how teams manage and publish documentation it works across projects of all sizes from a single readme to enterprise knowledge bases with mdx reusable components and tailwind styling it keeps your workflow efficient without compromising flexibility use it for: product guides setup usage and troubleshooting internal docs processes policies and team references technical manuals apis sdks architecture walkthroughs customize the ui and structure to match your brand or workflow no lock-in core features feature description------------------------------------ ---------------------------------------------------------------------------write in markdown mdx combine markdown with components and mermaid js for rich content flexible navigation multi-level menus page hierarchy and auto-generated tocs code support syntax highlighting code tabs and one-click copy search fuzzy matching with highlight and instant results responsive design built-in light dark mode with mobile support math tables latex rendering and clean table styling seo defaults preconfigured meta open graph and structured data ai docs upcoming ai tools for smart search and content generation coming soon using this kit navigation is on the left pages flow from setup to advanced features but you re free to jump around use the table of contents on the right to skip through sections start with the installation guide community support got questions reach out via: github twitter facebook",
+      "cleanContent": "complete api documentation for the fastapps framework core classes basewidget the base class for all fastapps widgets class attributes identifier: str required unique widget identifier must match the widget folder name in widgets example: greeting for widgets greeting input_model: type basemodel pydantic model describing tool inputs enables validation and type hints name: str none human-friendly label shown in dashboards defaults to identifier when omitted methods execute self inputs ctx main entry point for your tool return serializable data consumed by the widget async execute mark as async when you call network services fastapps awaits the coroutine automatically fastapps client methods register widget_cls register a widget class manually useful when auto-discovery is disabled discover path recursively import modules and register widgets typical usage: discover server tools call identifier kwargs invoke a widget tool programmatically returns the json payload you send to the widget context helpers widgetcontext provides access to: state: persistence helpers get set delete logger: structured logging for observability settings: runtime configuration api keys env flags state helpers error handling raise domain-specific exceptions fastapps serializes the message use ctx logger exception to capture stack traces return fallback data so widgets can render graceful errors cli commands fastapps deploy integrates with flick to publish widgets pass --python or --node to customize runtimes version compatibility fastapps python sdk targets python 3 9 react widgets are built with react 18 chatjs hooks provide the widget bridge installed automatically leverage these apis to integrate fastapps deeply into your workflows",
       "headings": [
-        "Documents",
-        "Why use Documents?",
-        "Core Features",
-        "Using This Kit",
-        "Community Support"
+        "Core Classes",
+        "`FastApps` Client",
+        "Context Helpers",
+        "Error Handling",
+        "CLI Commands",
+        "Version Compatibility"
       ],
       "keywords": [
-        "introduction",
-        "guide",
-        "nextjs",
-        "documents",
-        "Documents",
-        "Why use Documents?",
-        "Core Features",
-        "Using This Kit",
-        "Community Support",
-        "Next.js",
-        "React",
-        "Tailwind CSS",
-        "TypeScript",
-        "Product Guides",
-        "Internal Docs",
-        "Technical Manuals",
-        "Write in Markdown/MDX",
-        "Flexible Navigation",
-        "Code Support",
-        "Search",
-        "Responsive Design",
-        "Math + Tables",
-        "SEO Defaults",
-        "AI Docs (Upcoming)"
+        "Core Classes",
+        "`FastApps` Client",
+        "Context Helpers",
+        "Error Handling",
+        "CLI Commands",
+        "Version Compatibility",
+        "`identifier: str`",
+        "`input_model: Type[BaseModel]`",
+        "`name: str | None`",
+        "`execute(self, inputs, ctx)`",
+        "`async execute`",
+        "`register(widget_cls)`",
+        "`discover(path)`",
+        "`call(identifier,",
+        "BaseWidget",
+        "python\nfrom fastapps import BaseWidget",
+        "#### Class Attributes\n\n**",
+        "** (required)\n\n* Unique widget identifier\n* Must match the widget folder name in",
+        "* Example:",
+        "for",
+        "**",
+        "**\n\n* Pydantic model describing tool inputs\n* Enables validation and type hints\n\n**",
+        "**\n\n* Human-friendly label shown in dashboards\n* Defaults to",
+        "when omitted\n\n#### Methods\n\n**",
+        "**\n\n* Main entry point for your tool\n* Return serializable data consumed by the widget\n\n**",
+        "**\n\n* Mark as",
+        "when you call network services\n* FastApps awaits the coroutine automatically\n\n##",
+        "Client",
+        "python\nfrom fastapps import FastApps\n\napp = FastApps()\napp.register(GreetingWidget)",
+        "### Methods\n\n**",
+        "**\n\n* Register a widget class manually\n* Useful when auto-discovery is disabled\n\n**",
+        "**\n\n* Recursively import modules and register widgets\n* Typical usage:",
+        "**\n\n* Invoke a widget tool programmatically\n* Returns the JSON payload you send to the widget\n\n## Context Helpers\n\n###",
+        "Provides access to:\n\n*",
+        ": persistence helpers (",
+        ",",
+        ")\n*",
+        ": structured logging for observability\n*",
+        ": runtime configuration (API keys, env flags)\n\n### State Helpers",
+        "python\nawait ctx.state.get(\"count\", default=0)\nawait ctx.state.set(\"count\", 1)\nawait ctx.state.clear()",
+        "## Error Handling\n\n* Raise domain-specific exceptions; FastApps serializes the message\n* Use",
+        "to capture stack traces\n* Return fallback data so widgets can render graceful errors\n\n## CLI Commands",
+        "bash\nfastapps create <name>   # Scaffold a new widget\nfastapps dev             # Run dev server with hot reload\nfastapps build           # Bundle widget assets",
+        "*",
+        "integrates with Flick to publish widgets\n* Pass",
+        "or"
       ]
     }
   },
   {
-    "slug": "/basic-setup/installation",
-    "title": "Installation",
-    "description": "This guide covers the installation of Documents and how to edit your new project.",
-    "content": "To install and edit the Documents, you need to have several prerequisites in place. Here's a list of all the essential pre-requisites\nfor setting up and working on this project.\n\n[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Frubixvi%2Frubix-documents\\&project-name=my-documents\\&repository-name=my-documents\\&demo-title=Documents\\&demo-description=This%20Document%20Starter%20Kit%20is%20developed%20with%20Next.js%2C%20Tailwind%20CSS%20and%20TypeScript.%20It%20serves%20as%20a%20flexible%20and%20scalable%20foundation%20for%20building%20documentation%20websites%20or%20content-driven%20projects.\\&demo-url=https%3A%2F%2Frubix-documents.vercel.app%2F\\&demo-image=https%3A%2F%2Fgithub.com%2Frubixvi%2Frubix-documents%2Fblob%2Fmain%2Fpublic%2Fscreens%2Fscreen-1.png)\n\n## Prerequisites\n\n## Installation\n\n## Optional\n\n## Important Information\n\nThe project's search functionality relies on the Husky's automation to build `search-data/documents.json` ensure git commit is performed to generate this file.\n",
+    "slug": "/introduction",
+    "title": "Introduction to FastApps",
+    "description": "Understand what FastApps is, why it exists, and how it upgrades ChatGPT development.",
+    "content": "Welcome to FastApps - a zero-boilerplate framework for building interactive ChatGPT widgets!\n\n## What is FastApps?\n\nFastApps is a Python framework that lets you build interactive, visual widgets for ChatGPT with minimal code. Instead of text-only responses, you can create rich, interactive UIs that run directly in ChatGPT.\n\n## Why FastApps?\n\n### Traditional ChatGPT Development\n\n```python\n# Just text responses\ndef my_tool():\n    return \"Here's the weather: 72°F, Sunny\"\n```\n\n### With FastApps\n\n```python\n# Rich, interactive widgets\ndef my_tool():\n    return Widget(\n        title=\"Weather Widget\",\n        data={\n            \"temperature\": 72,\n            \"conditions\": \"Sunny\",\n        },\n    )\n```\n\n## Key Benefits\n\n* Create production-quality UI widgets with minimal setup\n* Keep Python business logic and React presentation in sync\n* Support interactive states, forms, and live updates\n* Build demos and tools that feel native to ChatGPT\n\n## Why Widgets Matter\n\nTraditional ChatGPT tools answer with text. FastApps widgets add visual structure, controls, and interactivity that help users take action faster. Whether you're building dashboards, data explorers, or guided workflows, widgets give you the UI you need without leaving ChatGPT.\n\n## How FastApps Works\n\n1. **Python Tool** — Handles inputs, business logic, and data fetching.\n2. **React Widget** — Renders the UI, receives data from Python, and handles user interaction.\n3. **FastApps Runtime** — Connects the two, synchronizes state, and delivers the widget through ChatGPT.\n\n## What's Next?\n\n* Follow the Quick Start to get a widget running in minutes.\n* Explore the Project Setup guide to understand the file structure.\n* Dive into Widgets, Tools, State, Styling, and API guides for deeper knowledge.\n\nFastApps brings modern app patterns to AI-driven conversations. You're about to build experiences that feel magical inside ChatGPT.\n",
     "_searchMeta": {
-      "cleanContent": "to install and edit the documents you need to have several prerequisites in place here s a list of all the essential pre-requisites for setting up and working on this project deploy with vercel https: vercel com new clone repository-url https 3a 2f 2fgithub com 2frubixvi 2frubix-documents project-name my-documents repository-name my-documents demo-title documents demo-description this 20document 20starter 20kit 20is 20developed 20with 20next js 2c 20tailwind 20css 20and 20typescript 20it 20serves 20as 20a 20flexible 20and 20scalable 20foundation 20for 20building 20documentation 20websites 20or 20content-driven 20projects demo-url https 3a 2f 2frubix-documents vercel app 2f demo-image https 3a 2f 2fgithub com 2frubixvi 2frubix-documents 2fblob 2fmain 2fpublic 2fscreens 2fscreen-1 png prerequisites installation optional important information the project s search functionality relies on the husky s automation to build search-data documents json ensure git commit is performed to generate this file",
+      "cleanContent": "welcome to fastapps - a zero-boilerplate framework for building interactive chatgpt widgets what is fastapps fastapps is a python framework that lets you build interactive visual widgets for chatgpt with minimal code instead of text-only responses you can create rich interactive uis that run directly in chatgpt why fastapps traditional chatgpt development with fastapps key benefits create production-quality ui widgets with minimal setup keep python business logic and react presentation in sync support interactive states forms and live updates build demos and tools that feel native to chatgpt why widgets matter traditional chatgpt tools answer with text fastapps widgets add visual structure controls and interactivity that help users take action faster whether you re building dashboards data explorers or guided workflows widgets give you the ui you need without leaving chatgpt how fastapps works python tool handles inputs business logic and data fetching react widget renders the ui receives data from python and handles user interaction fastapps runtime connects the two synchronizes state and delivers the widget through chatgpt what s next follow the quick start to get a widget running in minutes explore the project setup guide to understand the file structure dive into widgets tools state styling and api guides for deeper knowledge fastapps brings modern app patterns to ai-driven conversations you re about to build experiences that feel magical inside chatgpt",
       "headings": [
-        "Prerequisites",
-        "Installation",
-        "Optional",
-        "Important Information"
+        "What is FastApps?",
+        "Why FastApps?",
+        "Key Benefits",
+        "Why Widgets Matter",
+        "How FastApps Works",
+        "What's Next?"
       ],
       "keywords": [
-        "installation",
-        "github",
-        "node",
-        "guide",
-        "nextjs",
-        "documents",
-        "Prerequisites",
-        "Installation",
-        "Optional",
-        "Important Information",
-        "search-data/documents.json"
+        "What is FastApps?",
+        "Why FastApps?",
+        "Key Benefits",
+        "Why Widgets Matter",
+        "How FastApps Works",
+        "What's Next?",
+        "Python Tool",
+        "React Widget",
+        "FastApps Runtime",
+        "python\n# Just text responses\ndef my_tool():\n    return \"Here's the weather: 72°F, Sunny\"",
+        "### With FastApps",
+        "python\n# Rich, interactive widgets\ndef my_tool():\n    return Widget(\n        title=\"Weather Widget\",\n        data={\n            \"temperature\": 72,\n            \"conditions\": \"Sunny\",\n        },\n    )"
       ]
     }
   },
   {
-    "slug": "/basic-setup/setup",
-    "title": "Setup",
-    "description": "Setting up and configuring your documentation project",
-    "content": "Setting up your new documentation project is straightforward. Most of the essential project settings can be configured within the `settings` folder.\n\n## Settings\n\nThis section provides the core settings for your documentation site, such as defining the site's URL, site icon and title.\n\n```tsx showLineNumbers\nexport const url = \"\"                 // The URL for your documentation site\nexport const siteicon = \"\"            // Icon displayed next to the site name in the header\nexport const sitename = \"\"            // Title of your documentation site\n```\n\n## Google Tags\n\nThis section allows you to integrate Google Tag Manager into your documentation project. You can add your GTM code and configure whether it's connected.\n\n```tsx showLineNumbers\nexport const gtm = \"\"                 // Add your Google Tag Manager code here\nexport const gtmconnected = true      // Set to true if GTM is connected, otherwise set to false\n```\n\n## Search Engine\n\nConfigure essential SEO settings to ensure your documentation site is optimized for search engines. This includes meta descriptions, keywords and social media sharing details like images and alt text.\n\n```tsx showLineNumbers\nexport const description = \"\"         // Description of your documentation site for SEO\nexport const keywords = [\"\", \"\"]      // List of SEO keywords for your documentation site\nexport const urlimage = \"\"            // The URL of the image used when sharing on social media)\nexport const imagealt = \"\"            // Alt text for shared images, helpful for screen readers\nexport const twitterhandle = \"\"       // Your company’s Twitter handle for social sharing\n```\n\n## Footer Branding\n\nThe footer settings allow you to customize the company information displayed at the bottom of the site. You can add the company name and the URL that the name will link to.\n\n```tsx showLineNumbers\nexport const companyname = \"\"         // The company name displayed in the copyright section\nexport const companylink = \"\"         // The URL your company name should link to\n```\n\n## General Layout\n\nThe layout settings control the appearance and functionality of various elements of the documentation site, such as branding, the right sidebar, feedback options, table of contents, and scroll-to-top functionality.\n\n```tsx showLineNumbers\nexport const branding = true          // Set to true to display our branding elements\nexport const rightsidebar = true      // Set to true to enable the right sidebar with feedback, table of contents and scroll-to-top\nexport const feedbackedit = true      // Control to enable/disable feedback on GitHub\nexport const tableofcontent = true    // Control to enable/disable the generated table of contents\nexport const totopscroll = true       // Control to enable/disable scroll-to-top button\n```\n\n## Github Control\n\nIf your MDX files are hosted on GitHub, you can configure the project to load documents directly from there. This option can be useful for syncing documentation updates directly with your repository.\n\n```tsx showLineNumbers\nexport const loadfromgithub = false   // Set to true to load your MDX documents directly from GitHub\n```\n\n## Project Structure\n",
+    "slug": "/project-setup",
+    "title": "Complete Project Setup",
+    "description": "Assemble the recommended FastApps project structure and required configuration files.",
+    "content": "This guide shows you exactly what files you need to create for a new FastApps project.\n\n## 📁 Initial Project Structure\n\n```bash\nmy-chatgpt-widgets/\n├── server/\n│   ├── __init__.py\n│   ├── main.py\n│   ├── tools/\n│   │   └── __init__.py\n│   └── api/                # (optional)\n│       └── __init__.py\n│\n├── widgets/                # (empty initially)\n│\n├── requirements.txt\n└── package.json\n```\n\n## 🔧 Required Files\n\n### `server/main.py`\n\n```python\nfrom fastapps import FastApps, discover_tools\n\napp = FastApps()\n\ndiscover_tools(app, \"server.tools\")\n\nif __name__ == \"__main__\":\n    app.run()\n```\n\n### `server/tools/__init__.py`\n\n```python\n# Ensures tools package imports correctly\n```\n\n### `widgets/__init__.py`\n\nNot required — widgets are pure frontend code.\n\n## 🪄 Auto-Discovery\n\n* FastApps scans `server/tools` for subclasses of `BaseWidget`\n* The widget identifier must match the folder name in `widgets/`\n* React components live in `widgets/<identifier>/index.jsx`\n\n## 🗂 Recommended Extras\n\n* `server/api/` for shared API clients\n* `flick.config.json` if you integrate with the Flick CLI\n* `.env` for secrets used by your tools\n\n## ✅ Checklist\n\n* \\[ ] Create the folder structure\n* \\[ ] Implement at least one tool and widget\n* \\[ ] Run `fastapps dev`\n* \\[ ] Confirm the widget renders in ChatGPT\n",
     "_searchMeta": {
-      "cleanContent": "setting up your new documentation project is straightforward most of the essential project settings can be configured within the settings folder settings this section provides the core settings for your documentation site such as defining the site s url site icon and title google tags this section allows you to integrate google tag manager into your documentation project you can add your gtm code and configure whether it s connected search engine configure essential seo settings to ensure your documentation site is optimized for search engines this includes meta descriptions keywords and social media sharing details like images and alt text footer branding the footer settings allow you to customize the company information displayed at the bottom of the site you can add the company name and the url that the name will link to general layout the layout settings control the appearance and functionality of various elements of the documentation site such as branding the right sidebar feedback options table of contents and scroll-to-top functionality github control if your mdx files are hosted on github you can configure the project to load documents directly from there this option can be useful for syncing documentation updates directly with your repository project structure",
+      "cleanContent": "this guide shows you exactly what files you need to create for a new fastapps project initial project structure required files server main py server tools _init_ py widgets _init_ py not required widgets are pure frontend code auto-discovery fastapps scans server tools for subclasses of basewidget the widget identifier must match the folder name in widgets react components live in widgets identifier index jsx recommended extras server api for shared api clients flick config json if you integrate with the flick cli env for secrets used by your tools checklist create the folder structure implement at least one tool and widget run fastapps dev confirm the widget renders in chatgpt",
       "headings": [
-        "Settings",
-        "Google Tags",
-        "Search Engine",
-        "Footer Branding",
-        "General Layout",
-        "Github Control",
-        "Project Structure"
+        "📁 Initial Project Structure",
+        "🔧 Required Files",
+        "🪄 Auto-Discovery",
+        "🗂 Recommended Extras",
+        "✅ Checklist"
       ],
       "keywords": [
-        "setup",
-        "configuration",
-        "layout",
-        "Google",
-        "SEO",
-        "nextjs",
-        "documents",
-        "Settings",
-        "Google Tags",
-        "Search Engine",
-        "Footer Branding",
-        "General Layout",
-        "Github Control",
-        "Project Structure",
-        "settings",
-        "tsx showLineNumbers\nexport const url = \"\"                 // The URL for your documentation site\nexport const siteicon = \"\"            // Icon displayed next to the site name in the header\nexport const sitename = \"\"            // Title of your documentation site",
-        "## Google Tags\n\nThis section allows you to integrate Google Tag Manager into your documentation project. You can add your GTM code and configure whether it's connected.",
-        "tsx showLineNumbers\nexport const gtm = \"\"                 // Add your Google Tag Manager code here\nexport const gtmconnected = true      // Set to true if GTM is connected, otherwise set to false",
-        "## Search Engine\n\nConfigure essential SEO settings to ensure your documentation site is optimized for search engines. This includes meta descriptions, keywords and social media sharing details like images and alt text.",
-        "tsx showLineNumbers\nexport const description = \"\"         // Description of your documentation site for SEO\nexport const keywords = [\"\", \"\"]      // List of SEO keywords for your documentation site\nexport const urlimage = \"\"            // The URL of the image used when sharing on social media)\nexport const imagealt = \"\"            // Alt text for shared images, helpful for screen readers\nexport const twitterhandle = \"\"       // Your company’s Twitter handle for social sharing",
-        "## Footer Branding\n\nThe footer settings allow you to customize the company information displayed at the bottom of the site. You can add the company name and the URL that the name will link to.",
-        "tsx showLineNumbers\nexport const companyname = \"\"         // The company name displayed in the copyright section\nexport const companylink = \"\"         // The URL your company name should link to",
-        "## General Layout\n\nThe layout settings control the appearance and functionality of various elements of the documentation site, such as branding, the right sidebar, feedback options, table of contents, and scroll-to-top functionality.",
-        "tsx showLineNumbers\nexport const branding = true          // Set to true to display our branding elements\nexport const rightsidebar = true      // Set to true to enable the right sidebar with feedback, table of contents and scroll-to-top\nexport const feedbackedit = true      // Control to enable/disable feedback on GitHub\nexport const tableofcontent = true    // Control to enable/disable the generated table of contents\nexport const totopscroll = true       // Control to enable/disable scroll-to-top button",
-        "## Github Control\n\nIf your MDX files are hosted on GitHub, you can configure the project to load documents directly from there. This option can be useful for syncing documentation updates directly with your repository.",
-        "tsx showLineNumbers\nexport const loadfromgithub = false   // Set to true to load your MDX documents directly from GitHub"
+        "📁 Initial Project Structure",
+        "🔧 Required Files",
+        "🪄 Auto-Discovery",
+        "🗂 Recommended Extras",
+        "✅ Checklist",
+        "bash\nmy-chatgpt-widgets/\n├── server/\n│   ├── __init__.py\n│   ├── main.py\n│   ├── tools/\n│   │   └── __init__.py\n│   └── api/                # (optional)\n│       └── __init__.py\n│\n├── widgets/                # (empty initially)\n│\n├── requirements.txt\n└── package.json",
+        "## 🔧 Required Files\n\n###",
+        "",
+        "python\nfrom fastapps import FastApps, discover_tools\n\napp = FastApps()\n\ndiscover_tools(app, \"server.tools\")\n\nif __name__ == \"__main__\":\n    app.run()",
+        "###",
+        "python\n# Ensures tools package imports correctly",
+        "Not required — widgets are pure frontend code.\n\n## 🪄 Auto-Discovery\n\n* FastApps scans",
+        "for subclasses of",
+        "* The widget identifier must match the folder name in",
+        "* React components live in",
+        "## 🗂 Recommended Extras\n\n*",
+        "for shared API clients\n*",
+        "if you integrate with the Flick CLI\n*",
+        "for secrets used by your tools\n\n## ✅ Checklist\n\n* \\[ ] Create the folder structure\n* \\[ ] Implement at least one tool and widget\n* \\[ ] Run"
       ]
     }
   },
   {
-    "slug": "/markdown/cards",
-    "title": "Cards",
-    "description": "Explore and implement various card styles, including small, large and image cards.",
-    "content": "This section introduces the different card styles available in the system, from compact small cards to visually rich image cards. Each example is paired with JSX code snippets, providing you with a practical guide to incorporate these components seamlessly into your project.\n\n## Small Card\n\n```jsx\n<CardGrid>\n  <Card\n    title=\"Instructions\"\n    href=\"/docs/basic-setup/installation\"\n    icon=\"alignJustify\"\n    variant=\"small\"\n    description=\"test description\"\n  />\n  <Card\n    title=\"Setup\"\n    href=\"/docs/basic-setup/setup\"\n    icon=\"alignJustify\"\n    variant=\"small\"\n  />\n  <Card\n    title=\"Rubix Studios\"\n    href=\"https://rubixstudios.com.au\"\n    icon=\"alignJustify\"\n    external={true}\n    variant=\"small\"\n  />\n</CardGrid>\n```\n\n## Large Card\n\n```jsx\n<CardGrid>\n  <Card\n    subtitle=\"Instructions\"\n    title=\"Installation\"\n    description=\"Get started with Documents using our quick start installation guide to get your project started.\"\n    href=\"/docs/basic-setup/installation\"\n  />\n  <Card\n    subtitle=\"Setup\"\n    title=\"Site Settings\"\n    description=\"Setting up your Documents projects layout, links and search engine optimisation.\"\n    href=\"/docs/basic-setup/setup\"\n  />\n  <Card\n    subtitle=\"Support\"\n    title=\"Rubix Studios\"\n    description=\"Australia's leading branding, marketing and web development company.\"\n    href=\"https://rubixstudios.com.au\"\n    external={true}\n  />\n</CardGrid>\n```\n\n## Image Card\n\n```jsx\n<CardGrid>\n  <Card\n    title=\"Instructions\"\n    href=\"/docs/introduction/installation\"\n    image=\"/images/og-image.png\"\n    variant=\"image\"\n  />\n  <Card\n    title=\"Setup\"\n    href=\"/docs/introduction/setup\"\n    image=\"/images/og-image.png\"\n    variant=\"image\"\n  />\n  <Card\n    title=\"Rubix Studios\"\n    href=\"https://www.rubixstudios.com.au\"\n    image=\"/images/og-image.png\"\n    external={true}\n    variant=\"image\"\n  />\n</CardGrid>\n```\n",
+    "slug": "/quickstart",
+    "title": "FastApps Quick Start",
+    "description": "Spin up your first FastApps project and run a widget in under five minutes.",
+    "content": "Get your first ChatGPT widget running in 5 minutes!\n\n## 📁 What Gets Created\n\nWhen you run `fastapps create greeting`, this structure is generated:\n\n```\nmy-widgets/\n├── server/\n│   ├── __init__.py              # Empty file\n│   ├── main.py                  # Auto-discovery server (pre-configured)\n│   └── tools/\n│       ├── __init__.py          # Empty file\n│       └── greeting_tool.py     # ← YOUR CODE: Widget backend\n│\n├── widgets/\n│   └── greeting/\n│       └── index.jsx            # ← YOUR CODE: Widget frontend\n│\n├── requirements.txt\n└── package.json\n```\n\n## 🚀 Create Your First Widget\n\n```bash\npip install fastapps\nfastapps create greeting\n```\n\n* Installs dependencies\n* Creates a Python tool in `server/tools/`\n* Generates a React widget in `widgets/`\n* Wires everything into the FastApps runtime\n\n## ▶️ Run the Development Server\n\n```bash\nfastapps dev\n```\n\n* Starts the FastApps dev server\n* Hot reloads your Python and React code\n* Opens the preview in ChatGPT-compatible mode\n\n## 🧪 Test the Widget\n\nCall your widget from Python:\n\n```python\nfrom fastapps import FastApps\n\nclient = FastApps()\nresponse = client.call(\"greeting\", name=\"Ada\")\nprint(response)\n```\n\nThe widget renders inside ChatGPT with the provided data.\n\n## ✅ Ready for Next Steps\n\n* Follow the Tutorial for a guided build\n* Explore Widgets and Tools to customize logic and UI\n* Connect APIs or state management when you need more power\n",
     "_searchMeta": {
-      "cleanContent": "this section introduces the different card styles available in the system from compact small cards to visually rich image cards each example is paired with jsx code snippets providing you with a practical guide to incorporate these components seamlessly into your project small card large card image card",
+      "cleanContent": "get your first chatgpt widget running in 5 minutes what gets created when you run fastapps create greeting this structure is generated: create your first widget installs dependencies creates a python tool in server tools generates a react widget in widgets wires everything into the fastapps runtime run the development server starts the fastapps dev server hot reloads your python and react code opens the preview in chatgpt-compatible mode test the widget call your widget from python: the widget renders inside chatgpt with the provided data ready for next steps follow the tutorial for a guided build explore widgets and tools to customize logic and ui connect apis or state management when you need more power",
       "headings": [
-        "Small Card",
-        "Large Card",
-        "Image Card"
+        "📁 What Gets Created",
+        "🚀 Create Your First Widget",
+        "▶️ Run the Development Server",
+        "🧪 Test the Widget",
+        "✅ Ready for Next Steps"
       ],
       "keywords": [
-        "Small Card",
-        "Large Card",
-        "Image Card",
-        "jsx\n<CardGrid>\n  <Card\n    title=\"Instructions\"\n    href=\"/docs/basic-setup/installation\"\n    icon=\"alignJustify\"\n    variant=\"small\"\n    description=\"test description\"\n  />\n  <Card\n    title=\"Setup\"\n    href=\"/docs/basic-setup/setup\"\n    icon=\"alignJustify\"\n    variant=\"small\"\n  />\n  <Card\n    title=\"Rubix Studios\"\n    href=\"https://rubixstudios.com.au\"\n    icon=\"alignJustify\"\n    external={true}\n    variant=\"small\"\n  />\n</CardGrid>",
-        "## Large Card",
-        "jsx\n<CardGrid>\n  <Card\n    subtitle=\"Instructions\"\n    title=\"Installation\"\n    description=\"Get started with Documents using our quick start installation guide to get your project started.\"\n    href=\"/docs/basic-setup/installation\"\n  />\n  <Card\n    subtitle=\"Setup\"\n    title=\"Site Settings\"\n    description=\"Setting up your Documents projects layout, links and search engine optimisation.\"\n    href=\"/docs/basic-setup/setup\"\n  />\n  <Card\n    subtitle=\"Support\"\n    title=\"Rubix Studios\"\n    description=\"Australia's leading branding, marketing and web development company.\"\n    href=\"https://rubixstudios.com.au\"\n    external={true}\n  />\n</CardGrid>",
-        "## Image Card",
-        "jsx\n<CardGrid>\n  <Card\n    title=\"Instructions\"\n    href=\"/docs/introduction/installation\"\n    image=\"/images/og-image.png\"\n    variant=\"image\"\n  />\n  <Card\n    title=\"Setup\"\n    href=\"/docs/introduction/setup\"\n    image=\"/images/og-image.png\"\n    variant=\"image\"\n  />\n  <Card\n    title=\"Rubix Studios\"\n    href=\"https://www.rubixstudios.com.au\"\n    image=\"/images/og-image.png\"\n    external={true}\n    variant=\"image\"\n  />\n</CardGrid>"
+        "📁 What Gets Created",
+        "🚀 Create Your First Widget",
+        "▶️ Run the Development Server",
+        "🧪 Test the Widget",
+        "✅ Ready for Next Steps",
+        "fastapps create greeting",
+        "my-widgets/\n├── server/\n│   ├── __init__.py              # Empty file\n│   ├── main.py                  # Auto-discovery server (pre-configured)\n│   └── tools/\n│       ├── __init__.py          # Empty file\n│       └── greeting_tool.py     # ← YOUR CODE: Widget backend\n│\n├── widgets/\n│   └── greeting/\n│       └── index.jsx            # ← YOUR CODE: Widget frontend\n│\n├── requirements.txt\n└── package.json",
+        "## 🚀 Create Your First Widget",
+        "bash\npip install fastapps\nfastapps create greeting",
+        "* Installs dependencies\n* Creates a Python tool in",
+        "* Generates a React widget in",
+        "* Wires everything into the FastApps runtime\n\n## ▶️ Run the Development Server",
+        "bash\nfastapps dev",
+        "* Starts the FastApps dev server\n* Hot reloads your Python and React code\n* Opens the preview in ChatGPT-compatible mode\n\n## 🧪 Test the Widget\n\nCall your widget from Python:",
+        "python\nfrom fastapps import FastApps\n\nclient = FastApps()\nresponse = client.call(\"greeting\", name=\"Ada\")\nprint(response)"
       ]
     }
   },
   {
-    "slug": "/markdown/diagrams",
-    "title": "Diagrams",
-    "description": "Add various diagram types, including flowcharts, decision trees and entity-relationship diagrams.",
-    "content": "Diagrams are powerful tools for visualizing processes, relationships, and decisions. This section showcases different types of diagrams created using **Mermaid**, complete with examples and reusable code snippets to integrate into your projects.\n\n## Flowchart\n\nA flowchart represents a sequence of steps or processes in a visual format. Use this diagram to map workflows, decision-making processes, or operational flows.\n\n```jsx\n<Mermaid\n  chart={\\`\n    graph TD;\n    Start --> Task1;\n    Task1 --> Task2;\n    Task2 --> End;\n  \\`}\n/>\n```\n\n## Decision Tree\n\nDecision trees illustrate choices and possible outcomes, making them ideal for decision-making workflows or processes involving multiple paths.\n\n```jsx\n<Mermaid\n  chart={\\`\n    graph TD;\n    A[Start] --> B{Is it raining?};\n    B -->|Yes| C[Take an umbrella];\n    B -->|No| D[Enjoy the weather];\n    C --> E[Go outside];\n    D --> E;\n  \\`}\n/>\n```\n\n## Entity-Relationship Diagram\n\nEntity-relationship diagrams (ERDs) are used to model relationships between entities in a system. They are widely used in database design and system architecture planning.\n\n```jsx\n<Mermaid\n  chart={\\`\n    erDiagram\n    CUSTOMER ||--o{ ORDER : places\n    ORDER ||--|{ LINE-ITEM : contains\n    PRODUCT ||--o{ LINE-ITEM : \"included in\"\n    CUSTOMER {\n        string name\n        string email\n    }\n    ORDER {\n        int orderNumber\n        date orderDate\n    }\n    LINE-ITEM {\n        int quantity\n        float price\n    }\n    PRODUCT {\n        int productId\n        string name\n        float price\n    }\n  \\`}\n/>\n```\n\nEach of these diagrams serves a specific purpose and Mermaid makes it easy to generate them dynamically. Feel free to experiment with the provided code snippets and adapt them to your needs.\n",
+    "slug": "/state",
+    "title": "Managing Widget State",
+    "description": "Persist and synchronize widget state between ChatGPT sessions and user interactions.",
+    "content": "Learn how to create stateful, interactive widgets that persist data across interactions.\n\n## What is Widget State?\n\nWidget state is data that:\n\n* Persists across widget interactions\n* Survives page refreshes\n* Is stored in ChatGPT's conversation context\n* Can be updated from your React component\n\n## Basic State Management\n\n### `useWidgetState` Hook\n\n```jsx\nimport { useWidgetState } from \"chatjs-hooks\";\n\nexport default function Counter() {\n  const [count, setCount] = useWidgetState(\"count\", 0);\n\n  return (\n    <div>\n      <p>Count: {count}</p>\n      <button onClick={() => setCount(count + 1)}>Increment</button>\n    </div>\n  );\n}\n```\n\n### Persist Multiple Values\n\n```jsx\nconst [filters, setFilters] = useWidgetState(\"filters\", {\n  search: \"\",\n  sort: \"best\",\n});\n```\n\n## Sync State to Python\n\n```python\nclass CounterWidget(BaseWidget):\n    identifier = \"counter\"\n\n    async def execute(self, inputs: CounterInput, ctx: WidgetContext):\n        count = await ctx.state.get(\"count\", default=0)\n        return {\"count\": count}\n```\n\nUse `ctx.state.set(\"count\", value)` in the widget via action handlers to push updates back to Python if needed.\n\n## Resetting State\n\n* Call `resetWidgetState()` from the frontend to clear all values\n* Or use `useWidgetState(key, default, { resetOnUnmount: true })`\n\n## Tips\n\n* Keep state keys stable across renders\n* Store serializable values (objects, arrays, numbers, strings)\n* Use server-provided defaults for first render\n* Combine with API calls to cache results per conversation\n",
     "_searchMeta": {
-      "cleanContent": "diagrams are powerful tools for visualizing processes relationships and decisions this section showcases different types of diagrams created using mermaid complete with examples and reusable code snippets to integrate into your projects flowchart a flowchart represents a sequence of steps or processes in a visual format use this diagram to map workflows decision-making processes or operational flows decision tree decision trees illustrate choices and possible outcomes making them ideal for decision-making workflows or processes involving multiple paths entity-relationship diagram entity-relationship diagrams erds are used to model relationships between entities in a system they are widely used in database design and system architecture planning each of these diagrams serves a specific purpose and mermaid makes it easy to generate them dynamically feel free to experiment with the provided code snippets and adapt them to your needs",
+      "cleanContent": "learn how to create stateful interactive widgets that persist data across interactions what is widget state widget state is data that: persists across widget interactions survives page refreshes is stored in chatgpt s conversation context can be updated from your react component basic state management usewidgetstate hook persist multiple values sync state to python use ctx state set count value in the widget via action handlers to push updates back to python if needed resetting state call resetwidgetstate from the frontend to clear all values or use usewidgetstate key default resetonunmount: true tips keep state keys stable across renders store serializable values objects arrays numbers strings use server-provided defaults for first render combine with api calls to cache results per conversation",
       "headings": [
-        "Flowchart",
-        "Decision Tree",
-        "Entity-Relationship Diagram"
+        "What is Widget State?",
+        "Basic State Management",
+        "Sync State to Python",
+        "Resetting State",
+        "Tips"
       ],
       "keywords": [
-        "Flowchart",
-        "Decision Tree",
-        "Entity-Relationship Diagram",
-        "Mermaid",
-        "jsx\n<Mermaid\n  chart={\\",
-        "}\n/>",
-        "## Decision Tree\n\nDecision trees illustrate choices and possible outcomes, making them ideal for decision-making workflows or processes involving multiple paths.",
-        "## Entity-Relationship Diagram\n\nEntity-relationship diagrams (ERDs) are used to model relationships between entities in a system. They are widely used in database design and system architecture planning."
+        "What is Widget State?",
+        "Basic State Management",
+        "Sync State to Python",
+        "Resetting State",
+        "Tips",
+        "useWidgetState",
+        "jsx\nimport { useWidgetState } from \"chatjs-hooks\";\n\nexport default function Counter() {\n  const [count, setCount] = useWidgetState(\"count\", 0);\n\n  return (\n    <div>\n      <p>Count: {count}</p>\n      <button onClick={() => setCount(count + 1)}>Increment</button>\n    </div>\n  );\n}",
+        "### Persist Multiple Values",
+        "jsx\nconst [filters, setFilters] = useWidgetState(\"filters\", {\n  search: \"\",\n  sort: \"best\",\n});",
+        "## Sync State to Python",
+        "python\nclass CounterWidget(BaseWidget):\n    identifier = \"counter\"\n\n    async def execute(self, inputs: CounterInput, ctx: WidgetContext):\n        count = await ctx.state.get(\"count\", default=0)\n        return {\"count\": count}",
+        "Use",
+        "in the widget via action handlers to push updates back to Python if needed.\n\n## Resetting State\n\n* Call",
+        "from the frontend to clear all values\n* Or use"
       ]
     }
   },
   {
-    "slug": "/markdown/filetree",
-    "title": "Filetree",
-    "description": "This section provides an overview of file structures and their implementation using the FileTree component.",
-    "content": "This section demonstrates the structure of a file tree using the `FileTree` component. Below is an example showcasing folders and files organized hierarchically for a project setup.\n\n## How to Use\n\nIntegrate the `FileTree` component into your project to visually represent file and folder structures. This is particularly useful for documentation, tutorials, or providing users with an overview of your project's architecture.\n\n### JSX Code Example\n\nHere is how you can define the file tree structure in for use in your project:\n\n```jsx\n<FileTree>\n  <Folder name=\"src\" label=\"Source Code\">\n    <File name=\"index.tsx\" label=\"Index File\" />\n    <Folder name=\"components\" label=\"Components\">\n      <File name=\"button.tsx\" label=\"Button Component\" />\n      <File name=\"input.tsx\" label=\"Input Component\" />\n    </Folder>\n    <Folder name=\"pages\" label=\"Pages\">\n      <File name=\"home.tsx\" label=\"Home Page\" />\n      <File name=\"about.tsx\" label=\"About Page\" />\n    </Folder>\n  </Folder>\n</FileTree>\n```\n\nUse this code as a template to set up your own file tree structure and customize it as needed.\n",
+    "slug": "/styling",
+    "title": "Styling Guide",
+    "description": "Style FastApps widgets with inline techniques and lightweight design patterns.",
+    "content": "Learn how to create beautiful, responsive widgets with great UX.\n\n## Inline Styles (Recommended)\n\n### Why Inline Styles?\n\n✅ **Advantages:**\n\n* No build configuration needed\n* Scoped to component automatically\n* Dynamic based on props/state\n* Works in all environments\n* Simple and straightforward\n\n❌ **No need for:**\n\n* CSS files\n* CSS modules\n* Styled-components\n* Tailwind (in most cases)\n\n## Example Widget Styling\n\n```jsx\nexport default function WeatherCard() {\n  const { city, forecast } = useWidgetProps();\n\n  return (\n    <div\n      style={{\n        padding: \"1.5rem\",\n        borderRadius: \"16px\",\n        background: \"linear-gradient(135deg, #4f46e5, #7c3aed)\",\n        color: \"white\",\n        boxShadow: \"0 20px 40px -20px rgba(79, 70, 229, 0.6)\",\n      }}\n    >\n      <p style={{ fontSize: \"0.85rem\", opacity: 0.8 }}>{city}</p>\n      <h2 style={{ margin: \"0.5rem 0\", fontSize: \"2rem\" }}>\n        {forecast.temperature}°\n      </h2>\n      <p>{forecast.summary}</p>\n    </div>\n  );\n}\n```\n\n## Responsive Layouts\n\n```jsx\nconst containerStyle = {\n  display: \"grid\",\n  gap: \"1rem\",\n  gridTemplateColumns: \"repeat(auto-fit, minmax(220px, 1fr))\",\n};\n```\n\n* Use CSS grid or flexbox inline\n* Prefer percentage widths or `minmax` for responsive cards\n* Adjust spacing with consistent `rem` values\n\n## Typography\n\n* Set `fontSize`, `fontWeight`, `lineHeight` inline\n* Use system fonts for consistency: `\"Inter\", -apple-system, system-ui`\n* Keep headings bold and larger than body text\n\n## Theming\n\n```jsx\nconst theme = {\n  background: \"#0f172a\",\n  surface: \"#1e293b\",\n  primary: \"#38bdf8\",\n  text: \"#e2e8f0\",\n};\n```\n\nApply theme values through inline styles or helper functions to keep widgets cohesive.\n\n## Polishing Touches\n\n* Rounded corners (`borderRadius`)\n* Soft shadows (`boxShadow`)\n* Gradient backgrounds\n* Micro interactions (hover styles, button animations)\n* Color-coded states for success/warning/error\n",
     "_searchMeta": {
-      "cleanContent": "this section demonstrates the structure of a file tree using the filetree component below is an example showcasing folders and files organized hierarchically for a project setup how to use integrate the filetree component into your project to visually represent file and folder structures this is particularly useful for documentation tutorials or providing users with an overview of your project s architecture jsx code example here is how you can define the file tree structure in for use in your project: use this code as a template to set up your own file tree structure and customize it as needed",
+      "cleanContent": "learn how to create beautiful responsive widgets with great ux inline styles recommended why inline styles advantages: no build configuration needed scoped to component automatically dynamic based on props state works in all environments simple and straightforward no need for: css files css modules styled-components tailwind in most cases example widget styling responsive layouts use css grid or flexbox inline prefer percentage widths or minmax for responsive cards adjust spacing with consistent rem values typography set fontsize fontweight lineheight inline use system fonts for consistency: inter -apple-system system-ui keep headings bold and larger than body text theming apply theme values through inline styles or helper functions to keep widgets cohesive polishing touches rounded corners borderradius soft shadows boxshadow gradient backgrounds micro interactions hover styles button animations color-coded states for success warning error",
       "headings": [
-        "How to Use"
+        "Inline Styles (Recommended)",
+        "Example Widget Styling",
+        "Responsive Layouts",
+        "Typography",
+        "Theming",
+        "Polishing Touches"
       ],
       "keywords": [
-        "How to Use",
-        "FileTree",
-        "jsx\n<FileTree>\n  <Folder name=\"src\" label=\"Source Code\">\n    <File name=\"index.tsx\" label=\"Index File\" />\n    <Folder name=\"components\" label=\"Components\">\n      <File name=\"button.tsx\" label=\"Button Component\" />\n      <File name=\"input.tsx\" label=\"Input Component\" />\n    </Folder>\n    <Folder name=\"pages\" label=\"Pages\">\n      <File name=\"home.tsx\" label=\"Home Page\" />\n      <File name=\"about.tsx\" label=\"About Page\" />\n    </Folder>\n  </Folder>\n</FileTree>"
+        "Inline Styles (Recommended)",
+        "Example Widget Styling",
+        "Responsive Layouts",
+        "Typography",
+        "Theming",
+        "Polishing Touches",
+        "Advantages:",
+        "No need for:",
+        "jsx\nexport default function WeatherCard() {\n  const { city, forecast } = useWidgetProps();\n\n  return (\n    <div\n      style={{\n        padding: \"1.5rem\",\n        borderRadius: \"16px\",\n        background: \"linear-gradient(135deg, #4f46e5, #7c3aed)\",\n        color: \"white\",\n        boxShadow: \"0 20px 40px -20px rgba(79, 70, 229, 0.6)\",\n      }}\n    >\n      <p style={{ fontSize: \"0.85rem\", opacity: 0.8 }}>{city}</p>\n      <h2 style={{ margin: \"0.5rem 0\", fontSize: \"2rem\" }}>\n        {forecast.temperature}°\n      </h2>\n      <p>{forecast.summary}</p>\n    </div>\n  );\n}",
+        "## Responsive Layouts",
+        "jsx\nconst containerStyle = {\n  display: \"grid\",\n  gap: \"1rem\",\n  gridTemplateColumns: \"repeat(auto-fit, minmax(220px, 1fr))\",\n};",
+        "* Use CSS grid or flexbox inline\n* Prefer percentage widths or",
+        "for responsive cards\n* Adjust spacing with consistent",
+        "values\n\n## Typography\n\n* Set",
+        ",",
+        "inline\n* Use system fonts for consistency:",
+        "* Keep headings bold and larger than body text\n\n## Theming",
+        "jsx\nconst theme = {\n  background: \"#0f172a\",\n  surface: \"#1e293b\",\n  primary: \"#38bdf8\",\n  text: \"#e2e8f0\",\n};",
+        "Apply theme values through inline styles or helper functions to keep widgets cohesive.\n\n## Polishing Touches\n\n* Rounded corners (",
+        ")\n* Soft shadows ("
       ]
     }
   },
   {
-    "slug": "/markdown",
-    "title": "Introduction",
-    "description": "This section provides an overview of Introduction.",
-    "content": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime, molestiae, facilis aperiam et, error illum vel ullam? Quis architecto dolore ullam\n\n* \\[x] Write the press release\n* \\[ ] Update the website\n* \\[ ] Contact the media\n\n| Syntax        | Description |   Test Text |\n| :------------ | :---------: | ----------: |\n| Header        |    Title    | Here's this |\n| Paragraph     |    Text     |    And more |\n| Strikethrough |             |    ~~Text~~ |\n\n## Sample Document with Mermaid\n\nHere is a Mermaid diagram:\n\nThis diagram should render automatically without any extra imports.\n\n## Getting Started\n\nTo begin using the Documentation Template, follow these simple steps:\n\n* Start by cloning the repository to your local machine.\n\nLorem ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit quae iure nulla deserunt dolore quam pariatur minus sapiente accusantium. Optio, necessitatibus sequi. Veritatis, aspernatur? Possimus quis repellat eum vitae eveniet.\n\n## Blockquotes\n\nBlockquotes are useful for emphasizing key points or quoting external sources:\n\n> \"Documentation is a love letter that you write to your future self.\" - Damian Conway\n\nFeel free to use blockquotes to highlight important information or quotes relevant to your documentation.\n\n## Code Examples with switch\n\nHere a custom tab component from shadcn ui is used.\n\n## Conclusion\n\nThank you for choosing the Documentation Template for your project. Whether you're documenting software, APIs, or processes, we're here to support you in creating clear and effective documentation. Happy documenting!\n",
+    "slug": "/tools",
+    "title": "Building Tools",
+    "description": "Implement Python backends that power FastApps widgets and expose inputs to ChatGPT.",
+    "content": "Learn how to create Python tools that power your ChatGPT widgets.\n\n## What is a Tool?\n\nA tool is a Python class that:\n\n* Lives in `server/tools/<widget>_tool.py`\n* Extends `BaseWidget`\n* Defines inputs with Pydantic\n* Implements widget logic in `execute()`\n\n## Basic Tool Structure\n\n```python\nfrom fastapps import BaseWidget, Field, ConfigDict\nfrom pydantic import BaseModel\nfrom typing import Dict, Any\n\n# 1. Define inputs\nclass GreetingInput(BaseModel):\n    model_config = ConfigDict(populate_by_name=True)\n    name: str = Field(..., description=\"Person to greet\")\n\n# 2. Implement tool\nclass GreetingWidget(BaseWidget):\n    identifier = \"greeting\"\n    input_model = GreetingInput\n\n    def execute(self, inputs: GreetingInput) -> Dict[str, Any]:\n        return {\"message\": f\"Hello {inputs.name}!\"}\n```\n\n## Input Validation\n\n* Use `pydantic` models for automatic validation\n* Add descriptions to drive ChatGPT prompt suggestions\n* Provide defaults for optional fields\n\n## Accessing External Services\n\n```python\nimport httpx\n\nclass WeatherWidget(BaseWidget):\n    identifier = \"weather\"\n    input_model = WeatherInput\n\n    async def execute(self, inputs: WeatherInput) -> Dict[str, Any]:\n        async with httpx.AsyncClient() as client:\n            response = await client.get(\n                \"https://api.weatherapi.com/v1/current.json\",\n                params={\"q\": inputs.city},\n            )\n        data = response.json()\n        return {\"city\": inputs.city, \"forecast\": data[\"current\"]}\n```\n\n## Returning Data\n\n* Return dictionaries that match the props your widget expects\n* Stick to JSON-serializable data types\n* Provide friendly defaults (`[]`, `{}`, etc.) when data is missing\n\n## Best Practices\n\n* Keep business logic in the tool; keep widgets focused on presentation\n* Extract API clients or reusable logic into `server/api/`\n* Use async `execute` when calling network resources\n* Log errors and return safe fallbacks to the widget\n",
     "_searchMeta": {
-      "cleanContent": "lorem ipsum dolor sit amet consectetur adipisicing elit numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime molestiae facilis aperiam et error illum vel ullam quis architecto dolore ullam x write the press release update the website contact the media syntax description test text:------------ :---------: ----------:header title here s thisparagraph text and morestrikethrough text sample document with mermaid here is a mermaid diagram: this diagram should render automatically without any extra imports getting started to begin using the documentation template follow these simple steps: start by cloning the repository to your local machine lorem ipsum dolor sit amet consectetur adipisicing elit reprehenderit quae iure nulla deserunt dolore quam pariatur minus sapiente accusantium optio necessitatibus sequi veritatis aspernatur possimus quis repellat eum vitae eveniet blockquotes blockquotes are useful for emphasizing key points or quoting external sources: documentation is a love letter that you write to your future self - damian conway feel free to use blockquotes to highlight important information or quotes relevant to your documentation code examples with switch here a custom tab component from shadcn ui is used conclusion thank you for choosing the documentation template for your project whether you re documenting software apis or processes we re here to support you in creating clear and effective documentation happy documenting",
+      "cleanContent": "learn how to create python tools that power your chatgpt widgets what is a tool a tool is a python class that: lives in server tools widget _tool py extends basewidget defines inputs with pydantic implements widget logic in execute basic tool structure input validation use pydantic models for automatic validation add descriptions to drive chatgpt prompt suggestions provide defaults for optional fields accessing external services returning data return dictionaries that match the props your widget expects stick to json-serializable data types provide friendly defaults etc when data is missing best practices keep business logic in the tool keep widgets focused on presentation extract api clients or reusable logic into server api use async execute when calling network resources log errors and return safe fallbacks to the widget",
       "headings": [
-        "Sample Document with Mermaid",
-        "Getting Started",
-        "Blockquotes",
-        "Code Examples with switch",
-        "Conclusion"
+        "What is a Tool?",
+        "Basic Tool Structure",
+        "Input Validation",
+        "Accessing External Services",
+        "Returning Data",
+        "Best Practices"
       ],
       "keywords": [
-        "Sample Document with Mermaid",
-        "Getting Started",
-        "Blockquotes",
-        "Code Examples with switch",
-        "Conclusion"
+        "What is a Tool?",
+        "Basic Tool Structure",
+        "Input Validation",
+        "Accessing External Services",
+        "Returning Data",
+        "Best Practices",
+        "server/tools/<widget>_tool.py",
+        "BaseWidget",
+        "execute()",
+        "python\nfrom fastapps import BaseWidget, Field, ConfigDict\nfrom pydantic import BaseModel\nfrom typing import Dict, Any\n\n# 1. Define inputs\nclass GreetingInput(BaseModel):\n    model_config = ConfigDict(populate_by_name=True)\n    name: str = Field(..., description=\"Person to greet\")\n\n# 2. Implement tool\nclass GreetingWidget(BaseWidget):\n    identifier = \"greeting\"\n    input_model = GreetingInput\n\n    def execute(self, inputs: GreetingInput) -> Dict[str, Any]:\n        return {\"message\": f\"Hello {inputs.name}!\"}",
+        "## Input Validation\n\n* Use",
+        "models for automatic validation\n* Add descriptions to drive ChatGPT prompt suggestions\n* Provide defaults for optional fields\n\n## Accessing External Services",
+        "python\nimport httpx\n\nclass WeatherWidget(BaseWidget):\n    identifier = \"weather\"\n    input_model = WeatherInput\n\n    async def execute(self, inputs: WeatherInput) -> Dict[str, Any]:\n        async with httpx.AsyncClient() as client:\n            response = await client.get(\n                \"https://api.weatherapi.com/v1/current.json\",\n                params={\"q\": inputs.city},\n            )\n        data = response.json()\n        return {\"city\": inputs.city, \"forecast\": data[\"current\"]}",
+        "## Returning Data\n\n* Return dictionaries that match the props your widget expects\n* Stick to JSON-serializable data types\n* Provide friendly defaults (",
+        ",",
+        ", etc.) when data is missing\n\n## Best Practices\n\n* Keep business logic in the tool; keep widgets focused on presentation\n* Extract API clients or reusable logic into",
+        "* Use async"
       ]
     }
   },
   {
-    "slug": "/markdown/lists",
-    "title": "Lists",
-    "description": "This section provides an overview of creating and using lists in the Documents boilerplate.",
-    "content": "Learn how to create and render different types of lists in the Documents boilerplate. Examples include checklists, ordered lists, unordered lists and nested lists.\n\n## Checklist\n\n* \\[x] Write the press release\n* \\[ ] Update the website\n* \\[ ] Contact the media\n\n```jsx\n- [x] Write the press release\n- [ ] Update the website\n- [ ] Contact the media\n```\n\n## Simple List\n\n* Item 1\n* Item 2\n* Item 3\n\n```jsx\n- Item 1\n- Item 2\n- Item 3\n```\n\n## Number List\n\n1. Research\n2. Draft the content\n3. Review and edit\n4. Publish\n\n```jsx\n1. Research\n2. Draft the content\n3. Review and edit\n4. Publish\n```\n\n## Nested List\n\n* Main Category 1\n  * Sub Item 1.1\n  * Sub Item 1.2\n* Main Category 2\n  * Sub Item 2.1\n  * Sub Item 2.2\n\n```jsx\n- Main Category 1\n  - Sub Item 1.1\n  - Sub Item 1.2\n- Main Category 2\n  - Sub Item 2.1\n  - Sub Item 2.2\n```\n\nUse these examples as a foundation to create and customize lists that fit your project's needs.\n",
+    "slug": "/tutorial",
+    "title": "FastApps Widget Tutorial",
+    "description": "Build a complete FastApps widget step by step, from Python tool to React component.",
+    "content": "Learn to build ChatGPT widgets step by step.\n\n## Tutorial 1: Hello World\n\n### Goal\n\nCreate a simple greeting widget that displays a personalized message.\n\n### Python Tool\n\nCreate `server/tools/greeting_tool.py`:\n\n```python\nfrom fastapps import BaseWidget, Field, ConfigDict\nfrom pydantic import BaseModel\nfrom typing import Dict, Any\n\nclass GreetingInput(BaseModel):\n    model_config = ConfigDict(populate_by_name=True)\n    name: str = Field(..., description=\"Person to greet\")\n\nclass GreetingWidget(BaseWidget):\n    identifier = \"greeting\"\n    input_model = GreetingInput\n\n    def execute(self, inputs: GreetingInput) -> Dict[str, Any]:\n        return {\"message\": f\"Hello {inputs.name}!\"}\n```\n\n### React Widget\n\nCreate `widgets/greeting/index.jsx`:\n\n```jsx\nimport React from \"react\";\nimport { useWidgetProps } from \"chatjs-hooks\";\n\nexport default function GreetingWidget() {\n  const props = useWidgetProps();\n  return (\n    <div style={{ padding: \"1rem\" }}>\n      <h2>Hello Widget</h2>\n      <p>{props.message}</p>\n    </div>\n  );\n}\n```\n\n### Run It\n\n```bash\nfastapps dev\n```\n\n* Auto-discovers the widget\n* Hot reloads changes\n* Launches the widget in ChatGPT preview\n\n## Tutorial 2: Pizza List\n\n### Goal\n\nDisplay dynamic pizza data fetched from a Python tool.\n\n### Python Tool\n\n```python\nfrom fastapps import BaseWidget, Field\nfrom pydantic import BaseModel\nfrom typing import Dict, Any, List\n\nclass PizzaInput(BaseModel):\n    city: str = Field(..., description=\"City to search\")\n\nclass PizzaWidget(BaseWidget):\n    identifier = \"pizza_list\"\n    input_model = PizzaInput\n\n    def execute(self, inputs: PizzaInput) -> Dict[str, Any]:\n        pizzas: List[Dict[str, str]] = fetch_pizzas(inputs.city)\n        return {\"city\": inputs.city, \"pizzas\": pizzas}\n```\n\n### React Widget\n\n```jsx\nimport React from \"react\";\nimport { useWidgetProps } from \"chatjs-hooks\";\n\nexport default function PizzaList() {\n  const { city, pizzas } = useWidgetProps();\n\n  return (\n    <div style={{ padding: \"1rem\" }}>\n      <h2>Pizza in {city}</h2>\n      <ul>\n        {pizzas.map((pizza) => (\n          <li key={pizza.name}>\n            <strong>{pizza.name}</strong> — {pizza.style}\n          </li>\n        ))}\n      </ul>\n    </div>\n  );\n}\n```\n\n### State Updates\n\nAdd a search box with widget state:\n\n```jsx\nimport { useWidgetProps, useWidgetState } from \"chatjs-hooks\";\n\nexport default function PizzaList() {\n  const { city, pizzas } = useWidgetProps();\n  const [query, setQuery] = useWidgetState(\"query\", \"\");\n\n  const filtered = pizzas.filter((pizza) =>\n    pizza.name.toLowerCase().includes(query.toLowerCase())\n  );\n\n  return (\n    <div style={{ padding: \"1rem\" }}>\n      <input\n        value={query}\n        onChange={(event) => setQuery(event.target.value)}\n        placeholder=\"Filter pizzas\"\n      />\n      <ul>\n        {filtered.map((pizza) => (\n          <li key={pizza.name}>{pizza.name}</li>\n        ))}\n      </ul>\n    </div>\n  );\n}\n```\n\n## Tutorial 3: Deploy\n\n1. `fastapps build` to produce production assets\n2. Deploy Python backend to your platform of choice\n3. Serve the widget bundle to ChatGPT\n\nYou're now ready to build full-featured widgets with FastApps.\n",
     "_searchMeta": {
-      "cleanContent": "learn how to create and render different types of lists in the documents boilerplate examples include checklists ordered lists unordered lists and nested lists checklist x write the press release update the website contact the media simple list item 1 item 2 item 3 number list research draft the content review and edit publish nested list main category 1 sub item 1 1 sub item 1 2 main category 2 sub item 2 1 sub item 2 2 use these examples as a foundation to create and customize lists that fit your project s needs",
+      "cleanContent": "learn to build chatgpt widgets step by step tutorial 1: hello world goal create a simple greeting widget that displays a personalized message python tool create server tools greeting_tool py: react widget create widgets greeting index jsx: run it auto-discovers the widget hot reloads changes launches the widget in chatgpt preview tutorial 2: pizza list goal display dynamic pizza data fetched from a python tool python tool react widget state updates add a search box with widget state: tutorial 3: deploy fastapps build to produce production assets deploy python backend to your platform of choice serve the widget bundle to chatgpt you re now ready to build full-featured widgets with fastapps",
       "headings": [
-        "Checklist",
-        "Simple List",
-        "Number List",
-        "Nested List"
+        "Tutorial 1: Hello World",
+        "Tutorial 2: Pizza List",
+        "Tutorial 3: Deploy"
       ],
       "keywords": [
-        "Checklist",
-        "Simple List",
-        "Number List",
-        "Nested List",
-        "jsx\n- [x] Write the press release\n- [ ] Update the website\n- [ ] Contact the media",
-        "## Simple List\n\n* Item 1\n* Item 2\n* Item 3",
-        "jsx\n- Item 1\n- Item 2\n- Item 3",
-        "## Number List\n\n1. Research\n2. Draft the content\n3. Review and edit\n4. Publish",
-        "jsx\n1. Research\n2. Draft the content\n3. Review and edit\n4. Publish",
-        "## Nested List\n\n* Main Category 1\n  * Sub Item 1.1\n  * Sub Item 1.2\n* Main Category 2\n  * Sub Item 2.1\n  * Sub Item 2.2",
-        "jsx\n- Main Category 1\n  - Sub Item 1.1\n  - Sub Item 1.2\n- Main Category 2\n  - Sub Item 2.1\n  - Sub Item 2.2"
+        "Tutorial 1: Hello World",
+        "Tutorial 2: Pizza List",
+        "Tutorial 3: Deploy",
+        "server/tools/greeting_tool.py",
+        "python\nfrom fastapps import BaseWidget, Field, ConfigDict\nfrom pydantic import BaseModel\nfrom typing import Dict, Any\n\nclass GreetingInput(BaseModel):\n    model_config = ConfigDict(populate_by_name=True)\n    name: str = Field(..., description=\"Person to greet\")\n\nclass GreetingWidget(BaseWidget):\n    identifier = \"greeting\"\n    input_model = GreetingInput\n\n    def execute(self, inputs: GreetingInput) -> Dict[str, Any]:\n        return {\"message\": f\"Hello {inputs.name}!\"}",
+        "### React Widget\n\nCreate",
+        ":",
+        "jsx\nimport React from \"react\";\nimport { useWidgetProps } from \"chatjs-hooks\";\n\nexport default function GreetingWidget() {\n  const props = useWidgetProps();\n  return (\n    <div style={{ padding: \"1rem\" }}>\n      <h2>Hello Widget</h2>\n      <p>{props.message}</p>\n    </div>\n  );\n}",
+        "### Run It",
+        "bash\nfastapps dev",
+        "* Auto-discovers the widget\n* Hot reloads changes\n* Launches the widget in ChatGPT preview\n\n## Tutorial 2: Pizza List\n\n### Goal\n\nDisplay dynamic pizza data fetched from a Python tool.\n\n### Python Tool",
+        "python\nfrom fastapps import BaseWidget, Field\nfrom pydantic import BaseModel\nfrom typing import Dict, Any, List\n\nclass PizzaInput(BaseModel):\n    city: str = Field(..., description=\"City to search\")\n\nclass PizzaWidget(BaseWidget):\n    identifier = \"pizza_list\"\n    input_model = PizzaInput\n\n    def execute(self, inputs: PizzaInput) -> Dict[str, Any]:\n        pizzas: List[Dict[str, str]] = fetch_pizzas(inputs.city)\n        return {\"city\": inputs.city, \"pizzas\": pizzas}",
+        "### React Widget",
+        "jsx\nimport React from \"react\";\nimport { useWidgetProps } from \"chatjs-hooks\";\n\nexport default function PizzaList() {\n  const { city, pizzas } = useWidgetProps();\n\n  return (\n    <div style={{ padding: \"1rem\" }}>\n      <h2>Pizza in {city}</h2>\n      <ul>\n        {pizzas.map((pizza) => (\n          <li key={pizza.name}>\n            <strong>{pizza.name}</strong> — {pizza.style}\n          </li>\n        ))}\n      </ul>\n    </div>\n  );\n}",
+        "### State Updates\n\nAdd a search box with widget state:",
+        "jsx\nimport { useWidgetProps, useWidgetState } from \"chatjs-hooks\";\n\nexport default function PizzaList() {\n  const { city, pizzas } = useWidgetProps();\n  const [query, setQuery] = useWidgetState(\"query\", \"\");\n\n  const filtered = pizzas.filter((pizza) =>\n    pizza.name.toLowerCase().includes(query.toLowerCase())\n  );\n\n  return (\n    <div style={{ padding: \"1rem\" }}>\n      <input\n        value={query}\n        onChange={(event) => setQuery(event.target.value)}\n        placeholder=\"Filter pizzas\"\n      />\n      <ul>\n        {filtered.map((pizza) => (\n          <li key={pizza.name}>{pizza.name}</li>\n        ))}\n      </ul>\n    </div>\n  );\n}",
+        "## Tutorial 3: Deploy\n\n1."
       ]
     }
   },
   {
-    "slug": "/markdown/maths",
-    "title": "Maths",
-    "description": "This section provides an overview of Introduction.",
-    "content": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime, molestiae, facilis aperiam et, error illum vel ullam? Quis architecto dolore ullam\n\n## Basic Algebra\n\nThe area of a circle ($$A$$) can be calculated using the radius ($$r$$) as follows:\n\n```math\nA = \\pi r^2\n```\n\n## Quadratic Formula\n\nThe quadratic formula for solving an equation of the form $$ax^2 + bx + c = 0$$ is:\n\n```math\nx = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n```\n\n## Newton's Second Law of Motion\n\nNewton's second law of motion states that force ($$F$$) is the product of mass ($$m$$) and acceleration ($$a$$):\n\n```math\nF = ma\n```\n\n## Pythagorean Theorem\n\nThe Pythagorean theorem relates the lengths of the sides of a right triangle:\n\n```math\na^2 + b^2 = c^2\n```\n\n## Einstein's Mass-Energy Equivalence\n\nEinstein's famous equation relates energy ($$E$$), mass ($$m$$), and the speed of light ($$c$$):\n\n```math\nE = mc^2\n```\n",
+    "slug": "/widgets",
+    "title": "Building Widgets",
+    "description": "Create interactive React components that render FastApps data inside ChatGPT.",
+    "content": "Learn how to create beautiful, interactive React components for your ChatGPT widgets.\n\n## What is a Widget?\n\nA widget is a React component that:\n\n* Lives in `widgets/<widget-name>/index.jsx`\n* Receives props from your Python tool\n* Renders in the ChatGPT interface\n* Can be interactive and stateful\n\n## Basic Widget Structure\n\n```jsx\nimport React from \"react\";\nimport { useWidgetProps } from \"chatjs-hooks\";\n\nexport default function MyWidget() {\n  // 1. Get data from Python backend\n  const props = useWidgetProps();\n\n  // 2. Render UI based on props\n  return (\n    <div style={{ padding: \"1rem\" }}>\n      <h2>{props.title}</h2>\n      <p>{props.description}</p>\n    </div>\n  );\n}\n```\n\n## Pattern: Lists\n\n```jsx\nexport default function PizzaList() {\n  const { pizzas } = useWidgetProps();\n\n  return (\n    <ul>\n      {pizzas.map((pizza) => (\n        <li key={pizza.name}>\n          <strong>{pizza.name}</strong> — {pizza.style}\n        </li>\n      ))}\n    </ul>\n  );\n}\n```\n\n## Pattern: User Input\n\n```jsx\nimport { useWidgetState } from \"chatjs-hooks\";\n\nexport default function TodoWidget() {\n  const [todos, setTodos] = useWidgetState(\"todos\", []);\n  const [text, setText] = useWidgetState(\"text\", \"\");\n\n  return (\n    <div>\n      <input\n        value={text}\n        onChange={(event) => setText(event.target.value)}\n        placeholder=\"Add a task\"\n      />\n      <button\n        onClick={() => {\n          setTodos([...todos, text]);\n          setText(\"\");\n        }}\n      >\n        Add\n      </button>\n      <ul>\n        {todos.map((todo) => (\n          <li key={todo}>{todo}</li>\n        ))}\n      </ul>\n    </div>\n  );\n}\n```\n\n## Pattern: Conditional UI\n\n```jsx\nexport default function WeatherWidget() {\n  const { loading, weather } = useWidgetProps();\n\n  if (loading) {\n    return <p>Loading...</p>;\n  }\n\n  if (!weather) {\n    return <p>No forecast available.</p>;\n  }\n\n  return (\n    <div>\n      <h2>{weather.city}</h2>\n      <p>{weather.summary}</p>\n    </div>\n  );\n}\n```\n\n## Tips\n\n* Keep components pure and deterministic\n* Use inline styles for fast iteration\n* Extract helpers into `widgets/shared/` if you reuse UI\n* Handle loading and empty states explicitly\n",
     "_searchMeta": {
-      "cleanContent": "lorem ipsum dolor sit amet consectetur adipisicing elit numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime molestiae facilis aperiam et error illum vel ullam quis architecto dolore ullam basic algebra the area of a circle a can be calculated using the radius r as follows: quadratic formula the quadratic formula for solving an equation of the form ax 2 bx c 0 is: newton s second law of motion newton s second law of motion states that force f is the product of mass m and acceleration a : pythagorean theorem the pythagorean theorem relates the lengths of the sides of a right triangle: einstein s mass-energy equivalence einstein s famous equation relates energy e mass m and the speed of light c :",
+      "cleanContent": "learn how to create beautiful interactive react components for your chatgpt widgets what is a widget a widget is a react component that: lives in widgets widget-name index jsx receives props from your python tool renders in the chatgpt interface can be interactive and stateful basic widget structure pattern: lists pattern: user input pattern: conditional ui tips keep components pure and deterministic use inline styles for fast iteration extract helpers into widgets shared if you reuse ui handle loading and empty states explicitly",
       "headings": [
-        "Basic Algebra",
-        "Quadratic Formula",
-        "Newton's Second Law of Motion",
-        "Pythagorean Theorem",
-        "Einstein's Mass-Energy Equivalence"
+        "What is a Widget?",
+        "Basic Widget Structure",
+        "Pattern: Lists",
+        "Pattern: User Input",
+        "Pattern: Conditional UI",
+        "Tips"
       ],
       "keywords": [
-        "Basic Algebra",
-        "Quadratic Formula",
-        "Newton's Second Law of Motion",
-        "Pythagorean Theorem",
-        "Einstein's Mass-Energy Equivalence",
-        "math\nA = \\pi r^2",
-        "## Quadratic Formula\n\nThe quadratic formula for solving an equation of the form $$ax^2 + bx + c = 0$$ is:",
-        "math\nx = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}",
-        "## Newton's Second Law of Motion\n\nNewton's second law of motion states that force ($$F$$) is the product of mass ($$m$$) and acceleration ($$a$$):",
-        "math\nF = ma",
-        "## Pythagorean Theorem\n\nThe Pythagorean theorem relates the lengths of the sides of a right triangle:",
-        "math\na^2 + b^2 = c^2",
-        "## Einstein's Mass-Energy Equivalence\n\nEinstein's famous equation relates energy ($$E$$), mass ($$m$$), and the speed of light ($$c$$):",
-        "math\nE = mc^2"
-      ]
-    }
-  },
-  {
-    "slug": "/markdown/notes",
-    "title": "Notes",
-    "description": "This section provides an overview of Introduction.",
-    "content": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime, molestiae, facilis aperiam et, error illum vel ullam? Quis architecto dolore ullam\n\n## Standard Note\n\n## Success Note\n\n## Warning Note\n\n## Danger Note\n",
-    "_searchMeta": {
-      "cleanContent": "lorem ipsum dolor sit amet consectetur adipisicing elit numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime molestiae facilis aperiam et error illum vel ullam quis architecto dolore ullam standard note success note warning note danger note",
-      "headings": [
-        "Standard Note",
-        "Success Note",
-        "Warning Note",
-        "Danger Note"
-      ],
-      "keywords": [
-        "Standard Note",
-        "Success Note",
-        "Warning Note",
-        "Danger Note"
-      ]
-    }
-  },
-  {
-    "slug": "/markdown/steps",
-    "title": "Steps",
-    "description": "This section provides an overview of Introduction.",
-    "content": "The `<Step>` and `<StepItem>` components allow you to create structured step-by-step guides in your documentation. These components are particularly useful when you want to break down a process or tutorial into easy-to-follow stages.\n\n## Steps\n\nTo create a step-by-step guide in your MDX, you can use the following structure:\n",
-    "_searchMeta": {
-      "cleanContent": "the step and stepitem components allow you to create structured step-by-step guides in your documentation these components are particularly useful when you want to break down a process or tutorial into easy-to-follow stages steps to create a step-by-step guide in your mdx you can use the following structure:",
-      "headings": [
-        "Steps"
-      ],
-      "keywords": [
-        "Steps",
-        "<Step>",
-        "<StepItem>"
-      ]
-    }
-  },
-  {
-    "slug": "/markdown/table",
-    "title": "Table",
-    "description": "This section provides an overview of Introduction.",
-    "content": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime, molestiae, facilis aperiam et, error illum vel ullam? Quis architecto dolore ullam\n\n| Syntax        | Description |   Test Text |\n| :------------ | :---------: | ----------: |\n| Header        |    Title    | Here's this |\n| Paragraph     |    Text     |    And more |\n| Strikethrough |             |    ~~Text~~ |\n\n| Feature       | Documentation Link |                    Notes |\n| :------------ | :----------------: | -----------------------: |\n| **Feature A** |     [Docs](#)      | For more info click here |\n| **Feature B** |     [Guide](#)     |  See the full guide here |\n| **Feature C** |     [Setup](#)     |       Setup instructions |\n",
-    "_searchMeta": {
-      "cleanContent": "lorem ipsum dolor sit amet consectetur adipisicing elit numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime molestiae facilis aperiam et error illum vel ullam quis architecto dolore ullam syntax description test text:------------ :---------: ----------:header title here s thisparagraph text and morestrikethrough text feature documentation link notes:------------ :----------------: -----------------------:feature a docs for more info click herefeature b guide see the full guide herefeature c setup setup instructions",
-      "headings": [],
-      "keywords": [
-        "Feature A",
-        "Feature B",
-        "Feature C"
-      ]
-    }
-  },
-  {
-    "slug": "/markdown/tabs",
-    "title": "Tabs",
-    "description": "This section provides an overview of Introduction.",
-    "content": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime, molestiae, facilis aperiam et, error illum vel ullam? Quis architecto dolore ullam\n\n## Code Examples with switch\n\nHere a custom tab component from shadcn ui is used.\n",
-    "_searchMeta": {
-      "cleanContent": "lorem ipsum dolor sit amet consectetur adipisicing elit numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime molestiae facilis aperiam et error illum vel ullam quis architecto dolore ullam code examples with switch here a custom tab component from shadcn ui is used",
-      "headings": [
-        "Code Examples with switch"
-      ],
-      "keywords": [
-        "Code Examples with switch"
-      ]
-    }
-  },
-  {
-    "slug": "/navigation",
-    "title": "Navigation",
-    "description": "How to build our your documents menu and navigations.",
-    "content": "",
-    "_searchMeta": {
-      "cleanContent": "",
-      "headings": [],
-      "keywords": [
-        "navigation",
-        "sidebar",
-        "menus",
-        "mdx",
-        "nextjs",
-        "documents"
-      ]
-    }
-  },
-  {
-    "slug": "/random",
-    "title": "Introduction",
-    "description": "This section provides an overview of Introduction.",
-    "content": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime, molestiae, facilis aperiam et, error illum vel ullam? Quis architecto dolore ullam\n\n* \\[x] Write the press release\n* \\[ ] Update the website\n* \\[ ] Contact the media\n\n| Syntax        | Description |   Test Text |\n| :------------ | :---------: | ----------: |\n| Header        |    Title    | Here's this |\n| Paragraph     |    Text     |    And more |\n| Strikethrough |             |    ~~Text~~ |\n\n## Getting Started\n\nTo begin using the Documentation Template, follow these simple steps:\n\n* Start by cloning the repository to your local machine.\n\nLorem ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit quae iure nulla deserunt dolore quam pariatur minus sapiente accusantium. Optio, necessitatibus sequi. Veritatis, aspernatur? Possimus quis repellat eum vitae eveniet.\n\n## Blockquotes\n\nBlockquotes are useful for emphasizing key points or quoting external sources:\n\n> \"Documentation is a love letter that you write to your future self.\" - Damian Conway\n\nFeel free to use blockquotes to highlight important information or quotes relevant to your documentation.\n\n## Code Examples with switch\n\nHere a custom tab component from shadcn ui is used.\n\n## Conclusion\n\nAdding some random stuff to change the code\n",
-    "_searchMeta": {
-      "cleanContent": "lorem ipsum dolor sit amet consectetur adipisicing elit numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime molestiae facilis aperiam et error illum vel ullam quis architecto dolore ullam x write the press release update the website contact the media syntax description test text:------------ :---------: ----------:header title here s thisparagraph text and morestrikethrough text getting started to begin using the documentation template follow these simple steps: start by cloning the repository to your local machine lorem ipsum dolor sit amet consectetur adipisicing elit reprehenderit quae iure nulla deserunt dolore quam pariatur minus sapiente accusantium optio necessitatibus sequi veritatis aspernatur possimus quis repellat eum vitae eveniet blockquotes blockquotes are useful for emphasizing key points or quoting external sources: documentation is a love letter that you write to your future self - damian conway feel free to use blockquotes to highlight important information or quotes relevant to your documentation code examples with switch here a custom tab component from shadcn ui is used conclusion adding some random stuff to change the code",
-      "headings": [
-        "Getting Started",
-        "Blockquotes",
-        "Code Examples with switch",
-        "Conclusion"
-      ],
-      "keywords": [
-        "Getting Started",
-        "Blockquotes",
-        "Code Examples with switch",
-        "Conclusion"
-      ]
-    }
-  },
-  {
-    "slug": "/structure/deep/deeper/even-deeper",
-    "title": "Introduction",
-    "description": "This section provides an overview of Introduction.",
-    "content": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime, molestiae, facilis aperiam et, error illum vel ullam? Quis architecto dolore ullam\n\n* \\[x] Write the press release\n* \\[ ] Update the website\n* \\[ ] Contact the media\n\n| Syntax        | Description |   Test Text |\n| :------------ | :---------: | ----------: |\n| Header        |    Title    | Here's this |\n| Paragraph     |    Text     |    And more |\n| Strikethrough |             |    ~~Text~~ |\n",
-    "_searchMeta": {
-      "cleanContent": "lorem ipsum dolor sit amet consectetur adipisicing elit numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime molestiae facilis aperiam et error illum vel ullam quis architecto dolore ullam x write the press release update the website contact the media syntax description test text:------------ :---------: ----------:header title here s thisparagraph text and morestrikethrough text",
-      "headings": [],
-      "keywords": []
-    }
-  },
-  {
-    "slug": "/structure/deep/deeper",
-    "title": "Introduction",
-    "description": "This section provides an overview of Introduction.",
-    "content": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime, molestiae, facilis aperiam et, error illum vel ullam? Quis architecto dolore ullam\n\n* \\[x] Write the press release\n* \\[ ] Update the website\n* \\[ ] Contact the media\n\n| Syntax        | Description |   Test Text |\n| :------------ | :---------: | ----------: |\n| Header        |    Title    | Here's this |\n| Paragraph     |    Text     |    And more |\n| Strikethrough |             |    ~~Text~~ |\n\n## Getting Started\n\nTo begin using the Documentation Template, follow these simple steps:\n\n* Start by cloning the repository to your local machine.\n\nLorem ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit quae iure nulla deserunt dolore quam pariatur minus sapiente accusantium. Optio, necessitatibus sequi. Veritatis, aspernatur? Possimus quis repellat eum vitae eveniet.\n\n## Blockquotes\n\nBlockquotes are useful for emphasizing key points or quoting external sources:\n\n> \"Documentation is a love letter that you write to your future self.\" - Damian Conway\n\nFeel free to use blockquotes to highlight important information or quotes relevant to your documentation.\n\n## Code Examples with switch\n\nHere a custom tab component from shadcn ui is used.\n\n## Conclusion\n\nThank you for choosing the Documentation Template for your project. Whether you're documenting software, APIs, or processes, we're here to support you in creating clear and effective documentation. Happy documenting!\n\n## Tabs Example\n",
-    "_searchMeta": {
-      "cleanContent": "lorem ipsum dolor sit amet consectetur adipisicing elit numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime molestiae facilis aperiam et error illum vel ullam quis architecto dolore ullam x write the press release update the website contact the media syntax description test text:------------ :---------: ----------:header title here s thisparagraph text and morestrikethrough text getting started to begin using the documentation template follow these simple steps: start by cloning the repository to your local machine lorem ipsum dolor sit amet consectetur adipisicing elit reprehenderit quae iure nulla deserunt dolore quam pariatur minus sapiente accusantium optio necessitatibus sequi veritatis aspernatur possimus quis repellat eum vitae eveniet blockquotes blockquotes are useful for emphasizing key points or quoting external sources: documentation is a love letter that you write to your future self - damian conway feel free to use blockquotes to highlight important information or quotes relevant to your documentation code examples with switch here a custom tab component from shadcn ui is used conclusion thank you for choosing the documentation template for your project whether you re documenting software apis or processes we re here to support you in creating clear and effective documentation happy documenting tabs example",
-      "headings": [
-        "Getting Started",
-        "Blockquotes",
-        "Code Examples with switch",
-        "Conclusion",
-        "Tabs Example"
-      ],
-      "keywords": [
-        "Getting Started",
-        "Blockquotes",
-        "Code Examples with switch",
-        "Conclusion",
-        "Tabs Example"
-      ]
-    }
-  },
-  {
-    "slug": "/structure/deep",
-    "title": "Introduction",
-    "description": "This section provides an overview of Introduction.",
-    "content": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime, molestiae, facilis aperiam et, error illum vel ullam? Quis architecto dolore ullam\n\n* \\[x] Write the press release\n* \\[ ] Update the website\n* \\[ ] Contact the media\n\n| Syntax        | Description |   Test Text |\r\n| :------------ | :---------: | ----------: |\r\n| Header        |    Title    | Here's this |\r\n| Paragraph     |    Text     |    And more |\r\n| Strikethrough |             |    ~~Text~~ |\n\n## Getting Started\n\nTo begin using the Documentation Template, follow these simple steps:\n\n* Start by cloning the repository to your local machine.\n\nLorem ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit quae iure nulla deserunt dolore quam pariatur minus sapiente accusantium. Optio, necessitatibus sequi. Veritatis, aspernatur? Possimus quis repellat eum vitae eveniet.\n\n## Blockquotes\n\nBlockquotes are useful for emphasizing key points or quoting external sources:\n\n> \"Documentation is a love letter that you write to your future self.\" - Damian Conway\n\nFeel free to use blockquotes to highlight important information or quotes relevant to your documentation.\n\n## Code Examples with switch\n\nHere a custom tab component from shadcn ui is used.\n\n## Conclusion\n\nThank you for choosing the Documentation Template for your project. Whether you're documenting software, APIs, or processes, we're here to support you in creating clear and effective documentation. Happy documenting!\n\n## Tabs Example\n",
-    "_searchMeta": {
-      "cleanContent": "lorem ipsum dolor sit amet consectetur adipisicing elit numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime molestiae facilis aperiam et error illum vel ullam quis architecto dolore ullam x write the press release update the website contact the media syntax description test text :------------ :---------: ----------: header title here s this paragraph text and more strikethrough text getting started to begin using the documentation template follow these simple steps: start by cloning the repository to your local machine lorem ipsum dolor sit amet consectetur adipisicing elit reprehenderit quae iure nulla deserunt dolore quam pariatur minus sapiente accusantium optio necessitatibus sequi veritatis aspernatur possimus quis repellat eum vitae eveniet blockquotes blockquotes are useful for emphasizing key points or quoting external sources: documentation is a love letter that you write to your future self - damian conway feel free to use blockquotes to highlight important information or quotes relevant to your documentation code examples with switch here a custom tab component from shadcn ui is used conclusion thank you for choosing the documentation template for your project whether you re documenting software apis or processes we re here to support you in creating clear and effective documentation happy documenting tabs example",
-      "headings": [
-        "Getting Started",
-        "Blockquotes",
-        "Code Examples with switch",
-        "Conclusion",
-        "Tabs Example"
-      ],
-      "keywords": [
-        "Getting Started",
-        "Blockquotes",
-        "Code Examples with switch",
-        "Conclusion",
-        "Tabs Example"
-      ]
-    }
-  },
-  {
-    "slug": "/structure",
-    "title": "Structure",
-    "description": "This section provides an overview of Introduction.",
-    "content": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime, molestiae, facilis aperiam et, error illum vel ullam? Quis architecto dolore ullam\n\n* \\[x] Write the press release\n* \\[ ] Update the website\n* \\[ ] Contact the media\n\n| Syntax        | Description |   Test Text |\n| :------------ | :---------: | ----------: |\n| Header        |    Title    | Here's this |\n| Paragraph     |    Text     |    And more |\n| Strikethrough |             |    ~~Text~~ |\n\n## Getting Started\n\nTo begin using the Documentation Template, follow these simple steps:\n\n* Start by cloning the repository to your local machine.\n\nLorem ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit quae iure nulla deserunt dolore quam pariatur minus sapiente accusantium. Optio, necessitatibus sequi. Veritatis, aspernatur? Possimus quis repellat eum vitae eveniet.\n\n## Blockquotes\n\nBlockquotes are useful for emphasizing key points or quoting external sources:\n\n> \"Documentation is a love letter that you write to your future self.\" - Damian Conway\n\nFeel free to use blockquotes to highlight important information or quotes relevant to your documentation.\n\n## Code Examples with switch\n\nHere a custom tab component from shadcn ui is used.\n\n## Conclusion\n\nThank you for choosing the Documentation Template for your project. Whether you're documenting software, APIs, or processes, we're here to support you in creating clear and effective documentation. Happy documenting!\n",
-    "_searchMeta": {
-      "cleanContent": "lorem ipsum dolor sit amet consectetur adipisicing elit numquam iste dolorum tempore consectetur explicabo tempora provident quia maxime molestiae facilis aperiam et error illum vel ullam quis architecto dolore ullam x write the press release update the website contact the media syntax description test text:------------ :---------: ----------:header title here s thisparagraph text and morestrikethrough text getting started to begin using the documentation template follow these simple steps: start by cloning the repository to your local machine lorem ipsum dolor sit amet consectetur adipisicing elit reprehenderit quae iure nulla deserunt dolore quam pariatur minus sapiente accusantium optio necessitatibus sequi veritatis aspernatur possimus quis repellat eum vitae eveniet blockquotes blockquotes are useful for emphasizing key points or quoting external sources: documentation is a love letter that you write to your future self - damian conway feel free to use blockquotes to highlight important information or quotes relevant to your documentation code examples with switch here a custom tab component from shadcn ui is used conclusion thank you for choosing the documentation template for your project whether you re documenting software apis or processes we re here to support you in creating clear and effective documentation happy documenting",
-      "headings": [
-        "Getting Started",
-        "Blockquotes",
-        "Code Examples with switch",
-        "Conclusion"
-      ],
-      "keywords": [
-        "Getting Started",
-        "Blockquotes",
-        "Code Examples with switch",
-        "Conclusion"
+        "What is a Widget?",
+        "Basic Widget Structure",
+        "Pattern: Lists",
+        "Pattern: User Input",
+        "Pattern: Conditional UI",
+        "Tips",
+        "widgets/<widget-name>/index.jsx",
+        "jsx\nimport React from \"react\";\nimport { useWidgetProps } from \"chatjs-hooks\";\n\nexport default function MyWidget() {\n  // 1. Get data from Python backend\n  const props = useWidgetProps();\n\n  // 2. Render UI based on props\n  return (\n    <div style={{ padding: \"1rem\" }}>\n      <h2>{props.title}</h2>\n      <p>{props.description}</p>\n    </div>\n  );\n}",
+        "## Pattern: Lists",
+        "jsx\nexport default function PizzaList() {\n  const { pizzas } = useWidgetProps();\n\n  return (\n    <ul>\n      {pizzas.map((pizza) => (\n        <li key={pizza.name}>\n          <strong>{pizza.name}</strong> — {pizza.style}\n        </li>\n      ))}\n    </ul>\n  );\n}",
+        "## Pattern: User Input",
+        "jsx\nimport { useWidgetState } from \"chatjs-hooks\";\n\nexport default function TodoWidget() {\n  const [todos, setTodos] = useWidgetState(\"todos\", []);\n  const [text, setText] = useWidgetState(\"text\", \"\");\n\n  return (\n    <div>\n      <input\n        value={text}\n        onChange={(event) => setText(event.target.value)}\n        placeholder=\"Add a task\"\n      />\n      <button\n        onClick={() => {\n          setTodos([...todos, text]);\n          setText(\"\");\n        }}\n      >\n        Add\n      </button>\n      <ul>\n        {todos.map((todo) => (\n          <li key={todo}>{todo}</li>\n        ))}\n      </ul>\n    </div>\n  );\n}",
+        "## Pattern: Conditional UI",
+        "jsx\nexport default function WeatherWidget() {\n  const { loading, weather } = useWidgetProps();\n\n  if (loading) {\n    return <p>Loading...</p>;\n  }\n\n  if (!weather) {\n    return <p>No forecast available.</p>;\n  }\n\n  return (\n    <div>\n      <h2>{weather.city}</h2>\n      <p>{weather.summary}</p>\n    </div>\n  );\n}",
+        "## Tips\n\n* Keep components pure and deterministic\n* Use inline styles for fast iteration\n* Extract helpers into"
       ]
     }
   }
