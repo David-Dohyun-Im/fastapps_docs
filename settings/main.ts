@@ -1,4 +1,4 @@
-export const url = "https://rubix-documents.vercel.app"
+export const url = "https://fastapps.org"
 export const siteicon = "/logo.svg"
 
 export const gtm = "GTM-XXXXXXX"
@@ -6,20 +6,21 @@ export const gtmconnected = true
 
 export const sitename = "FastApps"
 export const description =
-  "This comprehensive documentation template, crafted with Next.js and available as open-source, delivers a sleek and responsive design, tailored to meet all your project documentation requirements."
+  "FastApps - Build beautiful, responsive mobile applications with ease. A comprehensive framework and documentation for creating fast, modern apps."
 export const keywords = [
-  "Next.js",
+  "FastApps",
+  "mobile apps",
   "documentation",
-  "Rubix Studios",
+  "Next.js",
   "open source",
   "SEO",
 ]
-export const urlimage = "/images/og-image.png"
-export const imagealt = "Rubix Studios Documentation"
-export const twitterhandle = "@RubixStudios"
+export const urlimage = "/images/og-image.svg"
+export const imagealt = "FastApps Documentation"
+export const twitterhandle = "@FastApps"
 
-export const companyname = "Rubix Studios"
-export const companylink = "https://rubixstudios.com.au"
+export const companyname = "FastApps"
+export const companylink = "https://fastapps.org"
 
 export const branding = true
 export const rightsidebar = true
