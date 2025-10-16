@@ -1,134 +1,695 @@
 ---
-title: "Getting Started Guide: Build Your First App in 5 Minutes"
-description: "A comprehensive guide to help you build and deploy your first application quickly and efficiently."
+title: "FastApps: Build Your First ChatGPT Widget in 5 Minutes"
+description: "A zero-boilerplate framework for building interactive ChatGPT widgets. Learn how to create, build, and deploy your first widget with just two files."
 date: "2024-10-15"
 author:
   name: "David Im"
   image: ""
 category: "tutorials"
-tags: ["tutorial", "getting-started", "beginner", "quickstart"]
+tags: ["tutorial", "getting-started", "chatgpt", "widgets", "quickstart"]
 image: "/images/banner.svg"
 published: true
 ---
 
-# Getting Started: Build Your First App
+# FastApps: Build Your First ChatGPT Widget in 5 Minutes
 
-Welcome to our comprehensive getting started guide! In this tutorial, we'll walk you through building your first application from scratch. By the end of this guide, you'll have a fully functional app up and running.
+Welcome to FastApps! If you've ever wanted to build interactive widgets for ChatGPT but dreaded the boilerplate setup, you're in the right place. FastApps is a **zero-boilerplate framework** that lets you focus on what matters: your widget logic and UI.
 
-## Prerequisites
+In this guide, we'll walk you through creating your first ChatGPT widget from scratch. By the end, you'll have a fully functional widget running locally and exposed to ChatGPT through ngrok.
 
-Before we begin, make sure you have:
+[![PyPI](https://img.shields.io/pypi/v/fastapps.svg)](https://pypi.org/project/fastapps/)
+[![Python](https://img.shields.io/pypi/pyversions/fastapps.svg)](https://pypi.org/project/fastapps/)
+[![License](https://img.shields.io/github/license/fastapps-framework/fastapps.svg)](https://github.com/fastapps-framework/fastapps/blob/main/LICENSE)
 
-- Node.js 18.x or higher installed
-- Basic knowledge of JavaScript/TypeScript
-- A code editor (we recommend VS Code)
-- Git installed on your machine
+📚 **Full Documentation**: [https://www.fastapps.org/](https://www.fastapps.org/)
 
-## Step 1: Installation
+---
 
-First, let's install our CLI tool:
+## What Makes FastApps Different?
+
+Most frameworks force you to deal with:
+- ❌ Complex project configuration
+- ❌ Manual widget registration
+- ❌ Boilerplate setup code
+- ❌ Build system configuration
+
+FastApps eliminates all of that:
+- ✅ **Auto-discovery**: Widgets are automatically found and registered
+- ✅ **Two files per widget**: One Python file, one React file. That's it.
+- ✅ **CLI scaffolding**: Generate widgets instantly
+- ✅ **Type-safe**: Pydantic for Python, TypeScript support for React
+- ✅ **Modern React**: Use hooks like `useWidgetProps()` and `useWidgetState()`
+
+---
+
+## Quick Start
+
+### Step 1: Create a Virtual Environment (Recommended)
+
+First, let's set up a clean Python environment:
 
 ```bash
-npm install -g fastapps-cli
+python -m venv venv
+source venv/bin/activate    # macOS/Linux
+venv\Scripts\activate       # Windows
 ```
 
-Verify the installation:
+### Step 2: Install FastApps & Create Your Project
+
+Install the FastApps CLI and scaffold your first project:
 
 ```bash
-fastapps --version
+pip install fastapps
+fastapps init my-app
 ```
 
-## Step 2: Create Your Project
-
-Create a new project using our CLI:
-
-```bash
-fastapps create my-first-app
-cd my-first-app
-```
-
-This will scaffold a new project with all the necessary files and dependencies.
-
-## Step 3: Project Structure
-
-Your project structure should look like this:
+This single command generates your complete project structure:
 
 ```
-my-first-app/
-├── src/
-│   ├── app/
-│   ├── components/
-│   └── lib/
-├── public/
-├── package.json
+my-app/
+├── server/
+│   ├── __init__.py
+│   ├── main.py              # Auto-discovery server (no edits needed!)
+│   ├── tools/               # Widget backends go here
+│   │   └── __init__.py
+│   └── api/                 # (optional) Shared API utilities
+│       └── __init__.py
+├── widgets/                 # Widget frontends go here (empty initially)
+├── requirements.txt         # Python dependencies
+├── package.json             # JavaScript dependencies
+├── .gitignore
 └── README.md
 ```
 
-## Step 4: Start Development Server
+**Key Point**: `main.py` is already configured with auto-discovery. You'll never need to edit it!
 
-Start the development server:
-
-```bash
-npm run dev
-```
-
-Your app will be available at `http://localhost:3000`.
-
-## Step 5: Make Your First Changes
-
-Open `src/app/page.tsx` and modify the content:
-
-```tsx
-export default function Home() {
-  return (
-    <div>
-      <h1>Hello, World!</h1>
-      <p>This is my first app!</p>
-    </div>
-  )
-}
-```
-
-Save the file and watch your changes appear instantly in the browser!
-
-## Step 6: Deploy Your App
-
-When you're ready to deploy:
+### Step 3: Install Dependencies
 
 ```bash
-npm run build
-npm run deploy
-```
-
-Congratulations! 🎉 You've just built and deployed your first app.
-
-## Next Steps
-
-Now that you have your first app running, here are some things to explore next:
-
-1. **Add Components**: Learn how to create reusable components
-2. **State Management**: Understand how to manage application state
-3. **Styling**: Customize your app's appearance
-4. **API Integration**: Connect to external APIs
-
-## Troubleshooting
-
-### Common Issues
-
-**Port already in use:**
-```bash
-npm run dev -- -p 3001
-```
-
-**Installation errors:**
-```bash
-rm -rf node_modules package-lock.json
+cd my-app
+pip install -r requirements.txt
 npm install
 ```
 
-## Conclusion
+### Step 4: Create Your First Widget
 
-You've successfully created your first app! This is just the beginning of your journey. Check out our other tutorials to learn more advanced concepts.
+Here's where the magic happens. One command creates both your Python backend and React frontend:
 
-Happy coding! 🚀
+```bash
+fastapps create my-widget
+```
 
+This adds two files to your project:
+
+```
+my-app/
+├── server/
+│   └── tools/
+│       └── my_widget_tool.py # ← Generated: Widget backend
+└── widgets/
+    └── my-widget/
+        └── index.jsx         # ← Generated: Widget frontend
+```
+
+**That's all the code you'll write!** No registration, no mounting logic, no configuration files.
+
+---
+
+## Understanding the Two Files
+
+Every FastApps widget consists of exactly two files you need to edit:
+
+### 1. Backend: `server/tools/my_widget_tool.py`
+
+This file defines your widget's logic, inputs, and data processing:
+
+```python
+from fastapps import BaseWidget, Field, ConfigDict
+from pydantic import BaseModel
+from typing import Dict, Any
+
+class MyWidgetInput(BaseModel):
+    """Define your widget's input schema with Pydantic"""
+    model_config = ConfigDict(populate_by_name=True)
+    
+    name: str = Field(default="World", description="Name to greet")
+
+class MyWidgetTool(BaseWidget):
+    """Your widget's backend logic"""
+    
+    identifier = "my-widget"         # Must match folder name
+    title = "My Widget"              # Display name in ChatGPT
+    input_schema = MyWidgetInput     # Input validation
+    invoking = "Processing..."       # Status message while running
+    invoked = "Done!"                # Status message when complete
+    
+    widget_csp = {
+        "connect_domains": [],       # APIs you'll call (e.g., ["https://api.example.com"])
+        "resource_domains": []       # Images/fonts you'll use (e.g., ["https://cdn.example.com"])
+    }
+    
+    async def execute(self, input_data: MyWidgetInput) -> Dict[str, Any]:
+        """Your logic goes here - return data as a dictionary"""
+        return {
+            "name": input_data.name,
+            "message": f"Hello, {input_data.name}!",
+            "timestamp": "2024-10-15"
+        }
+```
+
+**Key Concepts**:
+- `identifier`: Must match your widget folder name
+- `input_schema`: Pydantic validates inputs automatically
+- `execute()`: Your business logic - returns data to the frontend
+- `widget_csp`: Security policy for external resources
+
+### 2. Frontend: `widgets/my-widget/index.jsx`
+
+This file renders your UI using the data from Python:
+
+```jsx
+import React from 'react';
+import { useWidgetProps } from 'fastapps';
+
+export default function MyWidget() {
+  // Get data from Python backend
+  const props = useWidgetProps();
+  
+  return (
+    <div style={{
+      padding: '40px',
+      textAlign: 'center',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: 'white',
+      borderRadius: '12px',
+      boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+    }}>
+      <h1 style={{ fontSize: '2.5rem', margin: '0 0 16px 0' }}>
+        {props.message}
+      </h1>
+      <p style={{ fontSize: '1.2rem', opacity: 0.9 }}>
+        Welcome, {props.name}! 👋
+      </p>
+      <small style={{ opacity: 0.7 }}>
+        Generated at {props.timestamp}
+      </small>
+    </div>
+  );
+}
+```
+
+**Key Concepts**:
+- `useWidgetProps()`: Get data from your Python `execute()` method
+- Use inline styles for simplicity
+- React component = standard JSX
+
+---
+
+## Build and Run
+
+### Step 5: Build Your Widget
+
+Compile your React components:
+
+```bash
+npm run build
+```
+
+This generates optimized assets in the `assets/` directory:
+
+```
+my-app/
+└── assets/
+    ├── my-widget-[hash].html
+    └── my-widget-[hash].js
+```
+
+### Step 6: Start the Server
+
+Launch your FastApps server:
+
+```bash
+python server/main.py
+```
+
+Your widget is now live at **http://localhost:8001** 🎉
+
+---
+
+## Expose to ChatGPT with ngrok
+
+To test your widget in ChatGPT, you need to expose your local server to the internet. We'll use **ngrok** for this:
+
+### Step 7: Install ngrok
+
+```bash
+# macOS
+brew install ngrok
+
+# Windows (with Chocolatey)
+choco install ngrok
+
+# Windows (with Scoop)
+scoop install ngrok
+
+# Or download from: https://ngrok.com/download
+```
+
+### Step 8: Create a Tunnel
+
+In a **new terminal** (keep your FastApps server running), run:
+
+```bash
+ngrok http 8001
+```
+
+You'll see output like this:
+
+```
+Session Status                online
+Forwarding                    https://abc123.ngrok-free.app -> http://localhost:8001
+```
+
+Copy the **https URL** (e.g., `https://abc123.ngrok-free.app`).
+
+### Step 9: Add to ChatGPT
+
+1. Open **ChatGPT**
+2. Go to **Settings → Connectors**
+3. Add your ngrok URL with `/mcp`:
+   ```
+   https://abc123.ngrok-free.app/mcp
+   ```
+
+**Important**: Keep **both terminals running**:
+- **Terminal 1**: `python server/main.py` (your FastApps server)
+- **Terminal 2**: `ngrok http 8001` (public tunnel)
+
+---
+
+## What You Need to Know
+
+### Widget Structure
+
+Every widget has exactly **2 files** you write:
+
+| File | Purpose | Language |
+|------|---------|----------|
+| `server/tools/*_tool.py` | Backend logic, inputs, data processing | Python |
+| `widgets/*/index.jsx` | Frontend UI rendering | React |
+
+Everything else is automatic:
+- ✅ Widget discovery
+- ✅ Registration
+- ✅ Build process
+- ✅ Server setup
+- ✅ Mounting logic
+
+### Input Schema with Pydantic
+
+Define type-safe inputs with automatic validation:
+
+```python
+from fastapps import Field, ConfigDict
+from pydantic import BaseModel
+
+class MyInput(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    
+    name: str = Field(
+        default="", 
+        description="User's name",
+        min_length=1,
+        max_length=100
+    )
+    
+    age: int = Field(
+        default=0, 
+        ge=0,      # Greater than or equal to 0
+        le=150,    # Less than or equal to 150
+        description="User's age"
+    )
+    
+    email: str = Field(
+        default="", 
+        pattern=r'^[\w\.-]+@[\w\.-]+\.\w+$',
+        description="Valid email address"
+    )
+```
+
+### Content Security Policy (CSP)
+
+Allow your widget to access external resources:
+
+```python
+widget_csp = {
+    "connect_domains": [
+        "https://api.example.com",      # For API calls
+        "https://api.github.com"
+    ],
+    "resource_domains": [
+        "https://cdn.example.com",      # For images/fonts
+        "https://fonts.googleapis.com"
+    ]
+}
+```
+
+### React Hooks
+
+FastApps provides powerful React hooks:
+
+```jsx
+import { 
+  useWidgetProps, 
+  useWidgetState, 
+  useOpenAiGlobal,
+  useDisplayMode,
+  useMaxHeight 
+} from 'fastapps';
+
+function MyWidget() {
+  // Get data from Python backend
+  const props = useWidgetProps();
+  
+  // Persistent state (survives across sessions)
+  const [state, setState] = useWidgetState({ count: 0 });
+  
+  // Access ChatGPT environment
+  const theme = useOpenAiGlobal('theme');        // 'light' or 'dark'
+  const displayMode = useDisplayMode();          // 'inline', 'pip', 'fullscreen'
+  const maxHeight = useMaxHeight();              // Maximum widget height
+  
+  return (
+    <div style={{ 
+      background: theme === 'dark' ? '#1a1a1a' : '#ffffff',
+      height: maxHeight 
+    }}>
+      <h1>{props.message}</h1>
+      <button onClick={() => setState({ count: state.count + 1 })}>
+        Count: {state.count}
+      </button>
+    </div>
+  );
+}
+```
+
+---
+
+## Real-World Examples
+
+### Example 1: Simple Greeting Widget
+
+**Backend**: `server/tools/hello_tool.py`
+
+```python
+class HelloTool(BaseWidget):
+    identifier = "hello"
+    title = "Hello Widget"
+    input_schema = HelloInput
+    
+    async def execute(self, input_data):
+        return {
+            "message": f"Hello, {input_data.name}!",
+            "emoji": "👋"
+        }
+```
+
+**Frontend**: `widgets/hello/index.jsx`
+
+```jsx
+export default function Hello() {
+  const props = useWidgetProps();
+  
+  return (
+    <h1>
+      {props.emoji} {props.message}
+    </h1>
+  );
+}
+```
+
+### Example 2: Weather Widget with API Call
+
+**Backend**: `server/tools/weather_tool.py`
+
+```python
+import httpx
+
+class WeatherTool(BaseWidget):
+    identifier = "weather"
+    title = "Weather"
+    input_schema = WeatherInput
+    
+    widget_csp = {
+        "connect_domains": ["https://api.openweathermap.org"]
+    }
+    
+    async def execute(self, input_data):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.openweathermap.org/data/2.5/weather",
+                params={
+                    "q": input_data.city,
+                    "appid": "YOUR_API_KEY"
+                }
+            )
+            data = response.json()
+        
+        return {
+            "city": data["name"],
+            "temp": data["main"]["temp"],
+            "description": data["weather"][0]["description"]
+        }
+```
+
+**Frontend**: `widgets/weather/index.jsx`
+
+```jsx
+export default function Weather() {
+  const props = useWidgetProps();
+  
+  return (
+    <div>
+      <h2>{props.city}</h2>
+      <p>{props.temp}°C</p>
+      <p>{props.description}</p>
+    </div>
+  );
+}
+```
+
+### Example 3: Counter with Persistent State
+
+**Backend**: `server/tools/counter_tool.py`
+
+```python
+class CounterTool(BaseWidget):
+    identifier = "counter"
+    title = "Counter"
+    input_schema = CounterInput
+    
+    async def execute(self, input_data):
+        return {
+            "message": "Counter initialized!",
+            "initial_value": 0
+        }
+```
+
+**Frontend**: `widgets/counter/index.jsx`
+
+```jsx
+export default function Counter() {
+  const props = useWidgetProps();
+  const [state, setState] = useWidgetState({ 
+    count: props.initial_value 
+  });
+  
+  return (
+    <div>
+      <h1>Count: {state.count}</h1>
+      <button onClick={() => setState({ count: state.count + 1 })}>
+        Increment
+      </button>
+      <button onClick={() => setState({ count: state.count - 1 })}>
+        Decrement
+      </button>
+    </div>
+  );
+}
+```
+
+---
+
+## CLI Commands Reference
+
+FastApps provides a simple CLI for common tasks:
+
+### Create a New Widget
+
+```bash
+# If installed globally
+fastapps create mywidget
+
+# Or using Python module
+python -m fastapps.cli.main create mywidget
+```
+
+This generates both files:
+- `server/tools/mywidget_tool.py`
+- `widgets/mywidget/index.jsx`
+
+### Initialize a New Project
+
+```bash
+fastapps init my-project
+```
+
+Scaffolds a complete FastApps project structure.
+
+---
+
+## Project Structure Deep Dive
+
+After running `fastapps init` and `fastapps create my-widget`, here's what you get:
+
+```
+my-app/
+├── server/
+│   ├── __init__.py
+│   ├── main.py                  # ← Auto-discovery server (no edits needed!)
+│   ├── tools/
+│   │   ├── __init__.py
+│   │   └── my_widget_tool.py    # ← Edit this: Your widget logic
+│   └── api/                     # (optional: shared API utilities)
+│       └── __init__.py
+│
+├── widgets/
+│   └── my-widget/
+│       └── index.jsx            # ← Edit this: Your UI
+│
+├── assets/                      # Auto-generated during build
+│   ├── my-widget-abc123.html
+│   └── my-widget-abc123.js
+│
+├── requirements.txt             # Python dependencies
+├── package.json                 # JavaScript dependencies
+├── build-all.mts                # Auto-copied from fastapps
+├── .gitignore
+└── README.md
+```
+
+**You only edit 2 files**: The ones marked with `←`
+
+---
+
+## Troubleshooting
+
+### Widget Not Loading?
+
+1. **Check identifier matches folder name**:
+   ```python
+   # If folder is "my-widget", identifier must be:
+   identifier = "my-widget"
+   ```
+
+2. **Rebuild**:
+   ```bash
+   npm run build
+   ```
+
+3. **Restart server**:
+   ```bash
+   python server/main.py
+   ```
+
+### Import Errors?
+
+Update to the latest versions:
+
+```bash
+pip install --upgrade fastapps
+npm install fastapps@latest
+```
+
+### ngrok Connection Issues?
+
+1. **Check if server is running**: Visit `http://localhost:8001` in your browser
+2. **Verify ngrok URL**: Make sure you're using the **https URL** from ngrok
+3. **Add /mcp path**: The ChatGPT connector needs `https://your-url.ngrok-free.app/mcp`
+
+### Port Already in Use?
+
+Change the port in `server/main.py`:
+
+```python
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8002)  # Changed from 8001
+```
+
+Then update your ngrok command:
+```bash
+ngrok http 8002
+```
+
+---
+
+## Key Features Recap
+
+| Feature | Benefit |
+|---------|---------|
+| **Zero Boilerplate** | Just write your widget code, no setup |
+| **Auto-Discovery** | Widgets automatically registered |
+| **Type-Safe** | Pydantic for Python, TypeScript for React |
+| **CLI Tools** | Scaffold widgets instantly |
+| **React Hooks** | Modern React patterns via `fastapps` package |
+| **MCP Protocol** | Native ChatGPT integration |
+| **CSP Management** | Easy external resource configuration |
+
+---
+
+## Next Steps
+
+Now that you've built your first widget, explore these topics:
+
+1. **[Widget Basics](/docs/widgets/basics)** - Learn fundamental widget patterns
+2. **[React Hooks](/docs/widgets/react-hooks)** - Master the FastApps hook system
+3. **[Advanced Patterns](/docs/widgets/advanced-patterns)** - Build complex interactions
+4. **[Tool Basics](/docs/tools/basics)** - Deep dive into Python backend development
+5. **[API Reference](/docs/api-reference)** - Complete API documentation
+
+---
+
+## Resources
+
+- **📚 Documentation**: [https://www.fastapps.org/](https://www.fastapps.org/)
+- **🐍 PyPI Package**: [https://pypi.org/project/fastapps/](https://pypi.org/project/fastapps/)
+- **⚛️ npm Package**: [https://www.npmjs.com/package/fastapps](https://www.npmjs.com/package/fastapps)
+- **📦 GitHub**: [https://github.com/fastapps-framework/fastapps](https://github.com/fastapps-framework/fastapps)
+- **🔗 MCP Spec**: [https://modelcontextprotocol.io/](https://modelcontextprotocol.io/)
+
+---
+
+## Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](https://github.com/fastapps-framework/fastapps/blob/main/CONTRIBUTING.md) for guidelines.
+
+---
+
+## License
+
+MIT © FastApps Team
+
+---
+
+## Support
+
+Need help? Have questions?
+
+- 📖 Check our [documentation](https://www.fastapps.org/)
+- 🐛 [Open an issue](https://github.com/fastapps-framework/fastapps/issues)
+- 💬 Join our community discussions
+
+---
+
+**Happy building! 🚀** We can't wait to see what you create with FastApps.
