@@ -1,576 +1,285 @@
 ---
 title: Building Tools
-description: Implement Python backends that power FastApps widgets and expose inputs to ChatGPT.
+description: Create Python backends that power FastApps widgets and expose inputs to ChatGPT
 ---
 
 Learn how to create Python tools that power your ChatGPT widgets.
 
-## What is a Tool?
+FastApps tools are Python classes that define the backend logic for your widgets. They handle input validation, business logic, and data preparation, then return structured data that your React components can display.
 
-A tool is a Python class that:
-- Lives in `server/tools/<widget>_tool.py`
-- Extends `BaseWidget`
-- Defines inputs with Pydantic
-- Implements widget logic in `execute()`
+## Quick Start
+
+The fastest way to create a tool:
+
+```bash
+fastapps create mytool
+```
+
+This creates:
+- `server/tools/mytool_tool.py` - Python backend logic
+- `widgets/mytool/index.jsx` - React frontend component
+
+## Tool Architecture
+
+```mermaid
+graph TD
+    A[ChatGPT User] -->|Natural language| B[ChatGPT Model]
+    B -->|Tool call| C[FastApps Tool]
+    C -->|Validated inputs| D[execute method]
+    D -->|Business logic| E[Data processing]
+    E -->|Structured data| F[useWidgetProps]
+    F -->|React component| G[Widget UI]
+```
 
 ## Core Concepts
 
-### BaseWidget
+### 1. **Input Validation**
+- Pydantic models define input schemas
+- Automatic validation and type checking
+- Clear error messages for invalid inputs
 
-`BaseWidget` is the **abstract base class** that all FastApps widgets must inherit from. It handles all the MCP (Model Context Protocol) wiring and widget lifecycle management automatically.
+### 2. **Business Logic**
+- Implement your core functionality in `execute()`
+- Access to FastApps context (logging, state, settings)
+- Handle errors gracefully
 
-#### Required Class Attributes
+### 3. **Data Flow**
+- Tools return structured data
+- Data flows to React components via `useWidgetProps()`
+- Widget state persists across sessions
 
-| Attribute | Type | Description | Example |
-|-----------|------|-------------|---------|
-| `identifier` | `str` | Unique widget identifier. Must match the widget folder name in `widgets/`. Used as the resource URI identifier | `"greeting"` for `widgets/greeting/` |
-| `title` | `str` | Human-readable tool name displayed in ChatGPT interface. Shown when the model considers calling this tool | `"Show Greeting Widget"` |
-| `input_schema` | `Type[BaseModel]` | Pydantic model defining the tool's input parameters. ChatGPT uses this JSON schema to understand when and how to call your tool | `GreetingInput` |
-| `invoking` | `str` | Short, localized status message shown to users **while** the tool is being executed. Maps to `openai/toolInvocation/invoking` | `"Preparing your greeting…"` |
-| `invoked` | `str` | Short, localized status message shown to users **after** the tool completes. Maps to `openai/toolInvocation/invoked` | `"Greeting ready!"` |
+### 4. **MCP Integration**
+- Automatic MCP tool registration
+- ChatGPT understands when to call your tools
+- Status messages for user feedback
 
-#### Optional Class Attributes
+## Learning Path
 
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `description` | `str` | `""` | Tool description that helps the model understand when to use this tool |
-| `widget_accessible` | `bool` | `True` | Whether the component can initiate tool calls back to the server. Set to `true` to allow component-initiated tool access. Maps to `openai/widgetAccessible` |
-| `widget_description` | `Optional[str]` | `None` | Description shown **to the model** when the component is rendered. Helps the model understand what's being displayed to avoid redundant content in its response. Maps to `openai/widgetDescription`. Example: `"Renders an interactive calendar showing the user's appointments"` |
-| `widget_csp` | `Optional[Dict[str, List[str]]]` | `None` | **Content Security Policy** defining which domains your component can access. Required for production distribution. Format: `{"connect_domains": [...], "resource_domains": [...]}`. See below for details |
-| `widget_prefers_border` | `bool` | `False` | Whether ChatGPT should render a border around the widget for a "Card" layout. Maps to `openai/widgetPrefersBorder` |
-| `widget_domain` | `Optional[str]` | `None` | Configures a dedicated subdomain for your widget. Use this for components that need to access APIs with origin/referrer restrictions (e.g., Google Maps). Maps to `openai/widgetDomain`. Example: `"https://chatgpt.com"` becomes `https://chatgpt-com.web-sandbox.oaiusercontent.com` |
-| `supported_locales` | `Optional[List[str]]` | `None` | List of locale codes your widget supports (IETF BCP 47 format). Examples: `["en", "en-US", "es", "fr-FR", "es-419"]`. Server will negotiate best match with client's preferred locale |
-| `default_locale` | `str` | `"en"` | Default locale to use when client's requested locale is not supported |
-| `read_only` | `bool` | `True` | Hint that this tool is read-only and doesn't modify server state. Used for optimization and UX |
+Choose your path based on your experience:
 
-**Content Security Policy (`widget_csp`) Details:**
+### 🚀 **Getting Started**
+- [**Tool Basics**](/docs/tools/basics) - Learn the fundamentals
+- [**Advanced Patterns**](/docs/tools/advanced) - Complex business logic
+- [**API Integration**](/docs/tools/integration) - Connect to external services
 
-The CSP controls which external resources your component can access. It defines two arrays:
+### 📚 **By Topic**
+- **Simple tools** → [Basics](/docs/tools/basics)
+- **Complex logic** → [Advanced Patterns](/docs/tools/advanced)
+- **External APIs** → [API Integration](/docs/tools/integration)
+- **Full reference** → [API Reference](/docs/api-reference)
 
-```python
-widget_csp = {
-    "connect_domains": [
-        "https://api.example.com",      # Domains for fetch/API calls (connect-src)
-        "https://analytics.example.com"
-    ],
-    "resource_domains": [
-        "https://cdn.example.com",      # Domains for images, fonts, stylesheets
-        "https://fonts.googleapis.com"  # (script-src, img-src, font-src)
-    ]
-}
-```
+## Common Use Cases
 
-These map to the following CSP directives:
-- `script-src 'self' ${resource_domains}`
-- `img-src 'self' data: ${resource_domains}`
-- `font-src 'self' ${resource_domains}`
-- `connect-src 'self' ${connect_domains}`
+| Use Case | Pattern | Example |
+|----------|---------|---------|
+| **Data Display** | Simple data transformation | Weather, news, statistics |
+| **User Input** | Form processing, validation | Surveys, settings, preferences |
+| **API Integration** | External service calls | Database queries, REST APIs |
+| **File Processing** | Upload, analysis, conversion | Document parsing, image processing |
+| **Real-time Data** | WebSocket, polling | Live updates, notifications |
+| **Business Logic** | Complex calculations, workflows | Analytics, reporting, automation |
 
-**Important:** A strict CSP is required for broad distribution in ChatGPT and will be inspected during the MCP review process.
+## Key Features
 
-#### Required Method
+### ✅ **Type Safety**
+Full Pydantic validation with clear error messages.
 
-**`async execute(input_data: BaseModel, context: Optional[ClientContext] = None) -> Dict[str, Any]`**
+### ✅ **Automatic Registration**
+Tools are auto-discovered and registered with ChatGPT.
 
-This is the core method where you implement your tool's logic and return data to hydrate your component.
+### ✅ **Rich Context**
+Access to logging, state management, and settings.
 
-**Parameters:**
-- `input_data`: An instance of your `input_schema` with validated parameters from ChatGPT
-- `context`: Optional `ClientContext` object containing:
-  - `context.locale` - User's preferred locale (IETF BCP 47 format, e.g., 'en-US', 'fr-FR')
-  - `context.user_agent` - Client user agent string (e.g., 'ChatGPT/1.2025.012')
-  - `context.user_location` - Coarse location data (country, region, city, timezone, coordinates)
-  - `context.raw_meta` - Full `_meta` dictionary from the MCP request
+### ✅ **Error Handling**
+Built-in error handling with graceful fallbacks.
 
-**Returns:**
-A dictionary that is injected into your component as `window.openai.toolOutput`. This data:
-- **Hydrates your React component** with the information it needs to render
-- **Is visible to the ChatGPT model**, which can narrate or summarize the values
-- Should be **JSON-serializable** (strings, numbers, booleans, lists, dicts)
-- Should be **scoped to what your UI needs** – keep it concise for better model performance
+### ✅ **Status Messages**
+User-friendly progress indicators during execution.
 
-**Must be async:**
-Always use `async def` even if you don't have any `await` calls inside.
+### ✅ **Widget Integration**
+Seamless data flow to React components.
 
-**Example:**
-```python
-async def execute(self, input_data: MyInput, context: Optional[ClientContext] = None) -> Dict[str, Any]:
-    # Fetch data from your backend/API
-    result = await some_async_operation()
-    
-    # Access client context if provided
-    locale = context.locale if context else self.default_locale
-    user_agent = context.user_agent if context else None
-    
-    # Return structured data for your component
-    return {
-        "message": "Success!",
-        "data": result,
-        "timestamp": datetime.now().isoformat(),
-        "locale": locale
-    }
-```
-
-**Important:** The returned dictionary is passed to your React component via `useWidgetProps()` and is also visible to the ChatGPT model.
-
-### ConfigDict
-
-`ConfigDict` is a **Pydantic configuration helper** used to configure how your input models behave. In FastApps, it's essential for handling field name conversions between Python (snake_case) and JavaScript/ChatGPT (camelCase).
-
-#### Why You Need It
-
-When you define a Pydantic model for your widget inputs, you should always include:
+## Example: Simple Calculator
 
 ```python
-class MyInput(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-```
-
-The `populate_by_name=True` setting allows the model to accept fields by **both** their original name and their alias. This is crucial for interoperability between:
-- Python backend (snake_case: `user_name`)
-- JavaScript frontend (camelCase: `userName`)
-
-#### Example with Field Aliases
-
-```python
-from fastapps import BaseWidget, Field, ConfigDict
+from fastapps import BaseWidget
 from pydantic import BaseModel
 
-class UserInput(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    
-    # Python uses snake_case, ChatGPT sends camelCase
-    user_name: str = Field(default="", alias="userName")
-    first_name: str = Field(default="", alias="firstName")
-    email_address: str = Field(default="", alias="emailAddress")
-```
+class CalculatorInput(BaseModel):
+    operation: str
+    a: float
+    b: float
 
-With this configuration:
-- ChatGPT can send `{"userName": "john", "firstName": "John"}`
-- Python receives it as `input_data.user_name` and `input_data.first_name`
+class CalculatorWidget(BaseWidget):
+    identifier = "calculator"
+    title = "Calculator Widget"
+    input_schema = CalculatorInput
+    invoking = "Calculating…"
+    invoked = "Calculation complete!"
 
-## Basic Tool Structure
-
-```python
-from fastapps import BaseWidget, Field, ConfigDict
-from pydantic import BaseModel
-from typing import Dict, Any
-
-# 1. Define inputs
-class GreetingInput(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    name: str = Field(..., description="Person to greet")
-
-# 2. Implement tool
-class GreetingTool(BaseWidget):
-    identifier = "greeting"
-    title = "Greeting Widget"
-    input_schema = GreetingInput
-    invoking = "Preparing greeting..."
-    invoked = "Greeting ready!"
-    
-    widget_csp = {
-        "connect_domains": [],
-        "resource_domains": []
-    }
-
-    async def execute(self, input_data: GreetingInput) -> Dict[str, Any]:
-        return {"message": f"Hello {input_data.name}!"}
-```
-
-## Input Validation
-
-- Use `pydantic` models for automatic validation
-- Add descriptions to drive ChatGPT prompt suggestions
-- Provide defaults for optional fields
-
-## Accessing External Services
-
-When your widget needs to call external APIs, make sure to:
-1. Include the API domain in `widget_csp["connect_domains"]`
-2. Use `async`/`await` for network requests
-3. Handle errors gracefully
-
-```python
-import httpx
-from pydantic import BaseModel
-
-class WeatherInput(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    city: str = Field(..., description="City name")
-
-class WeatherTool(BaseWidget):
-    identifier = "weather"
-    title = "Weather Widget"
-    input_schema = WeatherInput
-    invoking = "Fetching weather data..."
-    invoked = "Weather data ready!"
-    
-    # Allow API access
-    widget_csp = {
-        "connect_domains": ["https://api.weatherapi.com"],
-        "resource_domains": []
-    }
-
-    async def execute(self, input_data: WeatherInput) -> Dict[str, Any]:
+    def execute(self, inputs: CalculatorInput, ctx):
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    "https://api.weatherapi.com/v1/current.json",
-                    params={"q": input_data.city, "key": "YOUR_API_KEY"},
-                )
-                response.raise_for_status()
-            data = response.json()
+            if inputs.operation == "add":
+                result = inputs.a + inputs.b
+            elif inputs.operation == "subtract":
+                result = inputs.a - inputs.b
+            elif inputs.operation == "multiply":
+                result = inputs.a * inputs.b
+            elif inputs.operation == "divide":
+                if inputs.b == 0:
+                    raise ValueError("Cannot divide by zero")
+                result = inputs.a / inputs.b
+            else:
+                raise ValueError(f"Unknown operation: {inputs.operation}")
+            
             return {
-                "city": input_data.city,
-                "temperature": data["current"]["temp_c"],
-                "condition": data["current"]["condition"]["text"]
+                "operation": inputs.operation,
+                "a": inputs.a,
+                "b": inputs.b,
+                "result": result,
+                "formula": f"{inputs.a} {inputs.operation} {inputs.b} = {result}"
             }
+            
         except Exception as e:
             return {
                 "error": str(e),
-                "city": input_data.city
+                "operation": inputs.operation,
+                "a": inputs.a,
+                "b": inputs.b
             }
 ```
 
-## Returning Data
+## BaseWidget Class
 
-- Return dictionaries that match the props your widget expects
-- Stick to JSON-serializable data types
-- Provide friendly defaults (`[]`, `{}`, etc.) when data is missing
-
-## Complete Example
-
-Here's a full example showing all the features of `BaseWidget` and `ConfigDict`:
+Every FastApps tool must inherit from `BaseWidget`:
 
 ```python
-from fastapps import BaseWidget, Field, ConfigDict
-from pydantic import BaseModel
-from typing import Dict, Any, Optional
-import httpx
-
-class GitHubRepoInput(BaseModel):
-    """Input schema with validation and field aliases"""
-    model_config = ConfigDict(populate_by_name=True)
-    
-    repo_name: str = Field(
-        ...,
-        alias="repoName",
-        description="GitHub repository in format: owner/repo",
-        pattern=r"^[\w-]+/[\w-]+$"
-    )
-    include_stats: bool = Field(
-        default=True,
-        alias="includeStats",
-        description="Include repository statistics"
-    )
-
-class GitHubRepoTool(BaseWidget):
-    """Widget that fetches GitHub repository information"""
-    
+class MyWidget(BaseWidget):
     # Required attributes
-    identifier = "github_repo"
-    title = "Show GitHub Repository"
-    input_schema = GitHubRepoInput
-    description = "Displays detailed information about a GitHub repository including stats, description, and metadata"
-    invoking = "Fetching repository data…"
-    invoked = "Repository loaded"
+    identifier = "my_widget"           # Unique identifier
+    title = "My Widget Title"          # Display name
+    input_schema = MyInputModel        # Pydantic model
+    invoking = "Setting up widget…"    # Progress message
+    invoked = "Widget ready!"          # Completion message
     
     # Optional attributes
-    widget_accessible = False  # Set to True only if component needs to call tools
-    widget_description = "Renders an interactive card showing GitHub repository information including name, description, stars, forks, and programming language"
-    widget_prefers_border = True  # Renders better as a card
-    read_only = True  # This tool doesn't modify server state
+    description = "Widget description" # Help text
+    widget_accessible = True           # Allow component calls
     
-    # Content Security Policy
-    widget_csp = {
-        "connect_domains": [
-            "https://api.github.com",
-            "https://github.com"
-        ],
-        "resource_domains": [
-            "https://avatars.githubusercontent.com"  # For profile images
-        ]
-    }
-    
-    async def execute(self, input_data: GitHubRepoInput) -> Dict[str, Any]:
-        """
-        Fetch repository data from GitHub API
-        
-        Returns:
-            Dict containing repository information for the React component
-        """
-        try:
-            # Make API request
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"https://api.github.com/repos/{input_data.repo_name}",
-                    headers={"Accept": "application/vnd.github.v3+json"}
-                )
-                response.raise_for_status()
-            
-            repo_data = response.json()
-            
-            # Prepare response data
-            result = {
-                "success": True,
-                "name": repo_data["name"],
-                "full_name": repo_data["full_name"],
-                "description": repo_data.get("description", "No description"),
-                "owner": {
-                    "name": repo_data["owner"]["login"],
-                    "avatar": repo_data["owner"]["avatar_url"]
-                },
-                "url": repo_data["html_url"],
-                "homepage": repo_data.get("homepage", ""),
-                "language": repo_data.get("language", "Unknown"),
-            }
-            
-            # Include stats if requested
-            if input_data.include_stats:
-                result["stats"] = {
-                    "stars": repo_data["stargazers_count"],
-                    "forks": repo_data["forks_count"],
-                    "watchers": repo_data["watchers_count"],
-                    "open_issues": repo_data["open_issues_count"],
-                    "created_at": repo_data["created_at"],
-                    "updated_at": repo_data["updated_at"],
-                }
-            
-            return result
-            
-        except httpx.HTTPStatusError as e:
-            # Handle HTTP errors
-            return {
-                "success": False,
-                "error": f"GitHub API error: {e.response.status_code}",
-                "message": "Repository not found or API rate limit exceeded"
-            }
-        except Exception as e:
-            # Handle other errors
-            return {
-                "success": False,
-                "error": str(e),
-                "message": "Failed to fetch repository data"
-            }
+    def execute(self, inputs, ctx):
+        # Your business logic here
+        return {"data": "processed"}
 ```
 
-This example demonstrates:
-- ✅ Complete `BaseWidget` implementation with all attributes
-- ✅ `ConfigDict` with `populate_by_name=True` for field alias support
-- ✅ Field validation with patterns and descriptions
-- ✅ Content Security Policy for API and image access
-- ✅ Async/await for external API calls
-- ✅ Comprehensive error handling
-- ✅ Conditional data based on input parameters
-- ✅ Type hints for better IDE support
+## Learning Path
 
-## Advanced Features
+Ready to build your first tool? Follow this structured learning path:
 
-### Configuring Widget Domains
+### 1. **[Tool Basics](/docs/tools/basics)** - Fundamentals
+Learn the core concepts of FastApps tools:
+- What is a tool and how it works
+- BaseWidget class and required attributes
+- Input validation with Pydantic
+- Basic patterns and error handling
 
-If you have public API keys (e.g., Google Maps API) that need to be restricted to specific origins or referrers, you can configure a dedicated subdomain for your widget:
+### 2. **[Advanced Patterns](/docs/tools/advanced)** - Complex Logic
+Build sophisticated tools with advanced features:
+- Async operations and concurrent processing
+- State management with FastApps context
+- Database integration and file processing
+- Caching and background tasks
 
-```python
-class MapWidgetTool(BaseWidget):
-    identifier = "map_widget"
-    title = "Map Widget"
-    input_schema = MapInput
-    invoking = "Loading map..."
-    invoked = "Map ready!"
-    
-    # Configure dedicated subdomain
-    widget_domain = "https://chatgpt.com"
-    
-    widget_csp = {
-        "connect_domains": ["https://maps.googleapis.com"],
-        "resource_domains": ["https://maps.googleapis.com"]
-    }
-    
-    async def execute(self, input_data: MapInput, context=None) -> Dict[str, Any]:
-        return {"location": input_data.location}
+### 3. **[API Integration](/docs/tools/integration)** - External Services
+Connect your tools to external APIs and services:
+- REST and GraphQL API integration
+- Database connections (PostgreSQL, MongoDB)
+- Third-party services (OpenAI, Stripe)
+- Webhook handling and configuration management
+
+## Quick Start
+
+Want to jump right in? Use the FastApps CLI:
+
+```bash
+fastapps create mytool
 ```
 
-**How it works:**
-- Since we can't support dynamic dual-level subdomains, FastApps converts the origin `chatgpt.com` to `chatgpt-com`
-- Your widget is rendered at `https://chatgpt-com.web-sandbox.oaiusercontent.com`
-- These domains are unique to each partner
-- Note: Browser cookies are still not permitted, even with dedicated subdomains
+This creates both the Python tool and React component for you to customize.
 
-**Benefits:**
-- Enables ChatGPT punchout button in desktop fullscreen view
-- Allows you to restrict API access by origin/referrer for security
+## Common Use Cases
 
-### Serving Localized Content
+| Use Case | Pattern | Example |
+|----------|---------|---------|
+| **Data Display** | Simple data transformation | Weather, news, statistics |
+| **User Input** | Form processing, validation | Surveys, settings, preferences |
+| **API Integration** | External service calls | Database queries, REST APIs |
+| **File Processing** | Upload, analysis, conversion | Document parsing, image processing |
+| **Real-time Data** | WebSocket, polling | Live updates, notifications |
+| **Business Logic** | Complex calculations, workflows | Analytics, reporting, automation |
 
-FastApps supports automatic locale negotiation following IETF BCP 47 standards (e.g., `en-US`, `fr-FR`, `es-419`).
+## Key Features
 
-#### Define Supported Locales
+### ✅ **Type Safety**
+Full Pydantic validation with clear error messages.
+
+### ✅ **Automatic Registration**
+Tools are auto-discovered and registered with ChatGPT.
+
+### ✅ **Rich Context**
+Access to logging, state management, and settings.
+
+### ✅ **Error Handling**
+Built-in error handling with graceful fallbacks.
+
+### ✅ **Status Messages**
+User-friendly progress indicators during execution.
+
+### ✅ **Widget Integration**
+Seamless data flow to React components.
+
+## Architecture
+
+```mermaid
+graph TD
+    A[ChatGPT User] -->|Natural language| B[ChatGPT Model]
+    B -->|Tool call| C[FastApps Tool]
+    C -->|Validated inputs| D[execute method]
+    D -->|Business logic| E[Data processing]
+    E -->|Structured data| F[useWidgetProps]
+    F -->|React component| G[Widget UI]
+```
+
+## BaseWidget Structure
+
+Every FastApps tool follows this pattern:
 
 ```python
-from fastapps import BaseWidget, ClientContext
-from typing import Optional
+from fastapps import BaseWidget
+from pydantic import BaseModel
 
-class MultilingualTool(BaseWidget):
-    identifier = "multilingual"
-    title = "Multilingual Widget"
+class MyInput(BaseModel):
+    # Define your input schema
+    pass
+
+class MyWidget(BaseWidget):
+    # Required attributes
+    identifier = "my_widget"
+    title = "My Widget Title"
     input_schema = MyInput
-    invoking = "Loading..."
-    invoked = "Ready!"
+    invoking = "Setting up widget…"
+    invoked = "Widget ready!"
     
-    # Define supported locales
-    supported_locales = ["en", "en-US", "es", "es-419", "fr-FR", "de"]
-    default_locale = "en"
-    
-    widget_csp = {
-        "connect_domains": [],
-        "resource_domains": []
-    }
-    
-    async def execute(self, input_data: MyInput, context: Optional[ClientContext] = None) -> Dict[str, Any]:
-        # Access negotiated locale
-        locale = context.locale if context else self.default_locale
-        
-        # Localize your response
-        messages = {
-            "en": "Hello, World!",
-            "es": "¡Hola, Mundo!",
-            "fr": "Bonjour, le monde!",
-            "de": "Hallo, Welt!"
-        }
-        
-        # Get language-only code for fallback
-        lang = locale.split('-')[0]
-        message = messages.get(locale) or messages.get(lang) or messages["en"]
-        
-        return {
-            "message": message,
-            "locale": locale
-        }
+    def execute(self, inputs: MyInput, ctx):
+        # Your business logic here
+        return {"data": "processed"}
 ```
 
-#### Locale Negotiation Process
+## Next Steps
 
-1. **During MCP Initialize**: Client sends preferred locale in `_meta["openai/locale"]` (or `_meta["webplus/i18n"]` for older clients)
-2. **Server Negotiates**: FastApps uses RFC 4647 lookup rules to find the best match:
-   - Exact match (e.g., `fr-FR` matches `fr-FR`)
-   - Language-only match (e.g., `fr` for requested `fr-FR`)
-   - Any locale with matching language (e.g., `fr-CA` for requested `fr-FR`)
-   - Falls back to `default_locale` if no match
-3. **Server Responds**: FastApps echoes the resolved locale in `_meta["openai/locale"]`
-4. **Every Request**: The resolved locale is repeated in subsequent requests
+Ready to start building?
 
-**Best Practices for Localization:**
-- Support at least `en` (English) as a fallback
-- Use the locale for formatting numbers, dates, currency
-- Translate only server-side strings (status messages, error messages)
-- Store resolved locale with session context
-- Test with MCP Inspector by setting different `_meta["openai/locale"]` values
+1. **[Tool Basics](/docs/tools/basics)** - Learn the fundamentals
+2. **[Advanced Patterns](/docs/tools/advanced)** - Complex business logic
+3. **[API Integration](/docs/tools/integration)** - Connect to external services
 
-### Accessing Client Context
-
-The `ClientContext` object provides access to client hints and user information:
-
-```python
-from fastapps import BaseWidget, ClientContext
-from typing import Optional
-
-class ContextAwareTool(BaseWidget):
-    identifier = "context_aware"
-    title = "Context Aware Widget"
-    input_schema = MyInput
-    invoking = "Processing..."
-    invoked = "Done!"
-    
-    widget_csp = {
-        "connect_domains": [],
-        "resource_domains": []
-    }
-    
-    async def execute(self, input_data: MyInput, context: Optional[ClientContext] = None) -> Dict[str, Any]:
-        if not context:
-            return {"message": "No context available"}
-        
-        # Access client information
-        user_agent = context.user_agent  # e.g., "ChatGPT/1.2025.012"
-        location = context.user_location  # Dict with country, region, city, timezone
-        locale = context.locale  # e.g., "en-US"
-        
-        # Build response based on context
-        result = {
-            "message": f"Request from {locale}",
-            "client": user_agent,
-        }
-        
-        # Add location info if available
-        if location:
-            result["country"] = location.get("country", "Unknown")
-            result["timezone"] = location.get("timezone", "Unknown")
-        
-        return result
-```
-
-**Available Context Properties:**
-
-| Property | Type | Description | Example |
-|----------|------|-------------|---------|
-| `context.locale` | `Optional[str]` | User's preferred locale (IETF BCP 47) | `"en-US"`, `"fr-FR"`, `"es-419"` |
-| `context.user_agent` | `Optional[str]` | Client user agent string | `"ChatGPT/1.2025.012"` |
-| `context.user_location` | `Optional[Dict]` | Coarse location data (country, region, city, timezone, coordinates) | `{"country": "US", "timezone": "America/New_York"}` |
-| `context.raw_meta` | `Dict[str, Any]` | Full `_meta` dictionary from MCP request | `{"openai/locale": "en-US", ...}` |
-
-**Important Notes:**
-- Treat these values as **advisory only** – never use them for authorization
-- They're useful for tailoring formatting, regional content, or analytics
-- Clients may omit any field at any time
-- When logging, sanitize before sharing outside the service perimeter
-
-## Best Practices
-
-**Structure & Organization:**
-- Keep business logic in the tool; keep React widgets focused on presentation
-- Extract API clients or reusable logic into `server/api/`
-- Use descriptive class and variable names
-
-**Async & Performance:**
-- Always use `async def` for the `execute()` method
-- Use `async`/`await` when calling network resources
-- Consider caching for expensive operations
-
-**Error Handling:**
-- Always wrap external API calls in try/except blocks
-- Return error information to the widget (don't raise exceptions)
-- Provide friendly error messages for users
-- Log errors for debugging
-
-**Input Validation:**
-- Use Pydantic Field constraints (pattern, ge, le, etc.)
-- Always include `ConfigDict(populate_by_name=True)` in your input models
-- Provide clear descriptions for all fields to help ChatGPT understand when to use your tool
-- Use meaningful field aliases for camelCase compatibility
-
-**Security:**
-- **Always specify `widget_csp`** with only the domains you need
-- A strict CSP is required for production distribution and will be inspected during MCP review
-- Never hardcode API keys (use environment variables)
-- Validate and sanitize all user inputs
-- Be conservative with `connect_domains` and `resource_domains` – only include necessary domains
-
-**Data Return:**
-- Return dictionaries scoped to what your UI needs – keep payloads concise
-- Remember: the data is **visible to the ChatGPT model**, which may narrate it
-- Use `widget_description` to tell the model what's being displayed, reducing redundant responses
-- Stick to JSON-serializable data types (str, int, float, bool, list, dict)
-- Provide sensible defaults (`[]`, `{}`, `""`) when data is missing
-- Include success/error flags for better error handling in the UI
-
-**Status Messages:**
-- Keep `invoking` and `invoked` messages short and user-friendly
-- Use present progressive for `invoking`: "Fetching data…", "Loading board…"
-- Use past tense or present for `invoked`: "Data ready!", "Board loaded"
-
-**Widget Behavior:**
-- Set `widget_accessible=True` only if your component needs to initiate tool calls
-- Use `widget_description` to help the model understand what's displayed
-- Set `widget_prefers_border=True` for components that work better in a "Card" layout
-- Mark tools as `read_only=True` if they don't modify server state
+Or jump straight to the **[Quick Start Guide](/docs/quickstart)** for a complete walkthrough.

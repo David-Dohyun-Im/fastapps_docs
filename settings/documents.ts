@@ -39,10 +39,40 @@ export const Documents: DocumentPaths[] = [
   {
     title: "Building Widgets",
     href: "/widgets",
+    noLink: true,
+    items: [
+      {
+        title: "Widget Basics",
+        href: "/basics",
+      },
+      {
+        title: "React Hooks",
+        href: "/react-hooks",
+      },
+      {
+        title: "Advanced Patterns",
+        href: "/advanced-patterns",
+      },
+    ],
   },
   {
     title: "Building Tools",
     href: "/tools",
+    noLink: true,
+    items: [
+      {
+        title: "Tool Basics",
+        href: "/basics",
+      },
+      {
+        title: "Advanced Patterns",
+        href: "/advanced",
+      },
+      {
+        title: "API Integration",
+        href: "/integration",
+      },
+    ],
   },
   {
     spacer: true,
