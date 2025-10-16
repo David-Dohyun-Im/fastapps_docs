@@ -5,7 +5,6 @@ import { Settings } from "@/types/settings"
 import { getBlogPost, getBlogPosts, getRelatedPosts } from "@/lib/blog"
 import { MDXRemote } from "next-mdx-remote/rsc"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { Typography } from "@/components/ui/typography"
 import { BlogCard } from "@/components/blog/blog-card"
 import { components } from "@/lib/components"
@@ -101,13 +100,11 @@ export default async function BlogPostPage({ params }: PageProps) {
               ))}
             </div>
           )}
-
-          <Separator className="mt-8" />
         </header>
 
         {/* Featured Image */}
         {post.image && (
-          <div className="mb-8 overflow-hidden rounded-lg border">
+          <div className="my-8 overflow-hidden rounded-lg border">
             <img
               src={post.image}
               alt={post.title}
@@ -142,10 +139,8 @@ export default async function BlogPostPage({ params }: PageProps) {
           />
         </Typography>
 
-        <Separator className="my-12" />
-
         {/* Author bio at bottom */}
-        <div className="rounded-lg border bg-card p-6">
+        <div className="mt-12 rounded-lg border bg-card p-6">
           <div className="flex items-start gap-4">
             {post.author.image ? (
               <img

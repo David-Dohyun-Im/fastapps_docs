@@ -134,6 +134,56 @@
   margin: 0 !important;
 }
 
+/* Remove underlines from headings and their anchor links */
+.typography h1,
+.typography h2,
+.typography h3,
+.typography h4,
+.typography h5,
+.typography h6,
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6,
+.prose :where(h1):not(:where([class~="not-prose"], [class~="not-prose"] *)),
+.prose :where(h2):not(:where([class~="not-prose"], [class~="not-prose"] *)),
+.prose :where(h3):not(:where([class~="not-prose"], [class~="not-prose"] *)),
+.prose :where(h4):not(:where([class~="not-prose"], [class~="not-prose"] *)),
+.prose :where(h5):not(:where([class~="not-prose"], [class~="not-prose"] *)),
+.prose :where(h6):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  text-decoration: none !important;
+  border-bottom-width: 0 !important;
+  border-bottom-color: transparent !important;
+}
+
+/* Remove underlines from anchor tags inside headings */
+.typography h1 a,
+.typography h2 a,
+.typography h3 a,
+.typography h4 a,
+.typography h5 a,
+.typography h6 a,
+.prose h1 a,
+.prose h2 a,
+.prose h3 a,
+.prose h4 a,
+.prose h5 a,
+.prose h6 a,
+.prose :where(h1):not(:where([class~="not-prose"], [class~="not-prose"] *)) a,
+.prose :where(h2):not(:where([class~="not-prose"], [class~="not-prose"] *)) a,
+.prose :where(h3):not(:where([class~="not-prose"], [class~="not-prose"] *)) a,
+.prose :where(h4):not(:where([class~="not-prose"], [class~="not-prose"] *)) a,
+.prose :where(h5):not(:where([class~="not-prose"], [class~="not-prose"] *)) a,
+.prose :where(h6):not(:where([class~="not-prose"], [class~="not-prose"] *)) a {
+  text-decoration: none !important;
+  border-bottom: none !important;
+  text-decoration-line: none !important;
+}
+
 /* Fix heading visibility in dark mode */
 .dark .typography h1,
 .dark .typography h2,
@@ -148,6 +198,26 @@
 .dark .prose h5,
 .dark .prose h6 {
   color: oklch(0.985 0 0) !important;
+  border-bottom: none !important;
+  border-bottom-width: 0 !important;
+}
+
+/* Remove underlines from heading anchor tags in dark mode */
+.dark .typography h1 a,
+.dark .typography h2 a,
+.dark .typography h3 a,
+.dark .typography h4 a,
+.dark .typography h5 a,
+.dark .typography h6 a,
+.dark .prose h1 a,
+.dark .prose h2 a,
+.dark .prose h3 a,
+.dark .prose h4 a,
+.dark .prose h5 a,
+.dark .prose h6 a {
+  text-decoration: none !important;
+  border-bottom: none !important;
+  text-decoration-line: none !important;
 }
 
 .dark .typography strong,
