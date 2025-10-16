@@ -200,7 +200,7 @@ setState({
 
 ### useOpenAiGlobal()
 
-Access ChatGPT environment information like theme, layout, and locale.
+Access ChatGPT environment information like theme, layout, and locale. This is the base hook for accessing any global property.
 
 ```tsx
 import { useOpenAiGlobal } from 'fastapps';
@@ -225,6 +225,75 @@ export default function ThemedWidget() {
   );
 }
 ```
+
+---
+
+### useDisplayMode()
+
+Convenience hook for accessing the current display mode. Equivalent to `useOpenAiGlobal('displayMode')`.
+
+```tsx
+import { useDisplayMode } from 'fastapps';
+
+export default function ResponsiveWidget() {
+  const displayMode = useDisplayMode();
+  
+  return (
+    <div className={`mode-${displayMode}`}>
+      {displayMode === 'fullscreen' ? (
+        <div>
+          <h1>Full Screen Layout</h1>
+          <p>More space to show detailed content</p>
+        </div>
+      ) : displayMode === 'pip' ? (
+        <div>
+          <p>Picture-in-Picture view</p>
+        </div>
+      ) : (
+        <div>
+          <p>Inline compact view</p>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+**Display modes:**
+- `inline` - Default mode, widget appears inline with the conversation
+- `pip` - Picture-in-picture mode (mobile may coerce to fullscreen)
+- `fullscreen` - Full screen takeover
+
+---
+
+### useMaxHeight()
+
+Convenience hook for accessing the maximum height constraint. Equivalent to `useOpenAiGlobal('maxHeight')`.
+
+```tsx
+import { useMaxHeight } from 'fastapps';
+
+export default function ScrollableWidget() {
+  const maxHeight = useMaxHeight();
+  
+  return (
+    <div style={{ 
+      maxHeight: `${maxHeight}px`, 
+      overflow: 'auto',
+      padding: '16px'
+    }}>
+      <h2>Long Content</h2>
+      <p>This content will scroll if it exceeds the max height...</p>
+      {/* More content */}
+    </div>
+  );
+}
+```
+
+**Best practices:**
+- Always respect the `maxHeight` constraint
+- Use `overflow: auto` to enable scrolling
+- Consider the user's viewport size when designing layouts
 
 **Available globals:**
 
@@ -417,7 +486,13 @@ Here's a comprehensive example using all features:
 
 ```tsx
 import React from 'react';
-import { useWidgetProps, useWidgetState, useOpenAiGlobal } from 'fastapps';
+import { 
+  useWidgetProps, 
+  useWidgetState, 
+  useOpenAiGlobal,
+  useDisplayMode,
+  useMaxHeight 
+} from 'fastapps';
 
 interface Place {
   id: string;
@@ -446,9 +521,10 @@ export default function PizzaList() {
     lastVisited: null
   });
   
-  // Access ChatGPT globals
+  // Access ChatGPT globals - using convenience hooks
   const theme = useOpenAiGlobal('theme');
-  const displayMode = useOpenAiGlobal('displayMode');
+  const displayMode = useDisplayMode();
+  const maxHeight = useMaxHeight();
   const locale = useOpenAiGlobal('locale');
   
   // Toggle favorite
@@ -490,7 +566,9 @@ export default function PizzaList() {
       background: theme === 'dark' ? '#1a1a1a' : '#ffffff',
       color: theme === 'dark' ? '#ffffff' : '#000000',
       padding: '16px',
-      fontFamily: 'system-ui, sans-serif'
+      fontFamily: 'system-ui, sans-serif',
+      maxHeight: `${maxHeight}px`,
+      overflow: 'auto'
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>🍕 Pizza in {props.city}</h2>
@@ -603,6 +681,40 @@ const [state, setState] = useWidgetState<MyState>({ items: [] });
 // All globals are typed
 const theme: Theme | null = useOpenAiGlobal('theme');
 const mode: DisplayMode | null = useOpenAiGlobal('displayMode');
+
+// Convenience hooks are also typed
+const displayMode: DisplayMode | null = useDisplayMode();
+const maxHeight: number | null = useMaxHeight();
+```
+
+**Available hooks:**
+- `useWidgetProps<T>(defaultState?)` - Access tool output with optional fallback
+- `useWidgetState<T>(defaultState)` - Persistent state management
+- `useOpenAiGlobal(key)` - Access any global property
+- `useDisplayMode()` - Get display mode (convenience)
+- `useMaxHeight()` - Get max height (convenience)
+
+**Creating custom convenience hooks:**
+
+You can easily create your own convenience hooks for frequently accessed globals:
+
+```tsx
+import { useOpenAiGlobal } from 'fastapps';
+
+// Custom hook for theme
+export function useTheme() {
+  return useOpenAiGlobal('theme');
+}
+
+// Custom hook for tool input
+export function useToolInput<T = any>() {
+  return useOpenAiGlobal('toolInput') as T | null;
+}
+
+// Custom hook for locale
+export function useLocale() {
+  return useOpenAiGlobal('locale');
+}
 ```
 
 ---

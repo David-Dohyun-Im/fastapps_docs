@@ -86,6 +86,100 @@ await ctx.state.clear()
 - Use `ctx.logger.exception` to capture stack traces
 - Return fallback data so widgets can render graceful errors
 
+## React Hooks API
+
+### Core Hooks
+
+**`useWidgetProps<T>(defaultState?)`**
+- Access tool output data from Python backend
+- Optionally provide fallback/default state
+- Maps to `window.openai.toolOutput`
+- Reactively updates when tool is called again
+
+```tsx
+import { useWidgetProps } from 'fastapps';
+
+const props = useWidgetProps({ message: 'Loading...' });
+```
+
+**`useWidgetState<T>(defaultState)`**
+- Persistent state management across sessions
+- Maps to `window.openai.widgetState` and `setWidgetState()`
+- Similar API to React's `useState`
+- State visible to ChatGPT model
+
+```tsx
+import { useWidgetState } from 'fastapps';
+
+const [state, setState] = useWidgetState({ count: 0 });
+```
+
+**`useOpenAiGlobal(key)`**
+- Base hook for accessing any ChatGPT global property
+- Returns typed value or `null` if not available
+- Subscribes to changes automatically
+
+```tsx
+import { useOpenAiGlobal } from 'fastapps';
+
+const theme = useOpenAiGlobal('theme');
+const locale = useOpenAiGlobal('locale');
+```
+
+### Convenience Hooks
+
+**`useDisplayMode()`**
+- Get current display mode: `"inline"`, `"pip"`, or `"fullscreen"`
+- Equivalent to `useOpenAiGlobal('displayMode')`
+
+```tsx
+import { useDisplayMode } from 'fastapps';
+
+const displayMode = useDisplayMode();
+```
+
+**`useMaxHeight()`**
+- Get maximum height constraint in pixels
+- Equivalent to `useOpenAiGlobal('maxHeight')`
+- Always respect this constraint in your layout
+
+```tsx
+import { useMaxHeight } from 'fastapps';
+
+const maxHeight = useMaxHeight();
+```
+
+### Available Globals
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `theme` | `'light' \| 'dark'` | Current theme |
+| `displayMode` | `'inline' \| 'pip' \| 'fullscreen'` | Display mode |
+| `locale` | `string` | User's locale (IETF BCP 47) |
+| `maxHeight` | `number` | Maximum height in pixels |
+| `safeArea` | `SafeArea` | Safe area insets |
+| `userAgent` | `UserAgent` | Device info |
+| `toolInput` | `object` | Tool input parameters |
+| `toolOutput` | `object` | Tool output data |
+| `toolResponseMetadata` | `object` | Response metadata |
+| `widgetState` | `object` | Current widget state |
+
+### Direct API Access
+
+**`window.openai.callTool(name, args)`**
+- Call MCP tools from your component
+- Requires `widget_accessible = True` in Python tool
+
+**`window.openai.sendFollowUpMessage({ prompt })`**
+- Insert messages into the ChatGPT conversation
+
+**`window.openai.requestDisplayMode({ mode })`**
+- Request display mode change (inline/pip/fullscreen)
+- Host may reject or coerce the request
+
+**`window.openai.openExternal({ href })`**
+- Open external URLs in new window/tab
+
 ## CLI Commands
 
 ```bash
@@ -101,6 +195,7 @@ fastapps build           # Bundle widget assets
 
 - FastApps Python SDK targets Python 3.9+
 - React widgets are built with React 18
-- ChatJS hooks provide the widget bridge (installed automatically)
+- React hooks package (`fastapps@1.1.0`) provides the widget bridge
+- Hooks align with OpenAI Apps SDK official examples
 
 Leverage these APIs to integrate FastApps deeply into your workflows.
