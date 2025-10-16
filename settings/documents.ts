@@ -13,6 +13,10 @@ type DocumentPaths =
 export const Documents: DocumentPaths[] = [
   {
     heading: "Overview",
+    title: "What is FastApps?",
+    href: "/what-is-fastapps",
+  },
+  {
     title: "Introduction",
     href: "/introduction",
   },
