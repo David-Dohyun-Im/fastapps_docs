@@ -13,6 +13,97 @@ A tool is a Python class that:
 - Defines inputs with Pydantic
 - Implements widget logic in `execute()`
 
+## Core Concepts
+
+### BaseWidget
+
+`BaseWidget` is the **abstract base class** that all FastApps widgets must inherit from. It handles all the MCP (Model Context Protocol) wiring and widget lifecycle management automatically.
+
+#### Required Class Attributes
+
+| Attribute | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `identifier` | `str` | Unique widget identifier. Must match the widget folder name in `widgets/` | `"greeting"` for `widgets/greeting/` |
+| `title` | `str` | Human-readable widget name displayed in ChatGPT interface | `"Greeting Widget"` |
+| `input_schema` | `Type[BaseModel]` | Pydantic model defining widget input parameters. Used for validation and ChatGPT suggestions | `GreetingInput` |
+| `invoking` | `str` | Message shown while the widget is loading | `"Preparing your greeting..."` |
+| `invoked` | `str` | Message shown when the widget is ready | `"Greeting ready!"` |
+
+#### Optional Class Attributes
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `description` | `str` | `""` | Additional widget description |
+| `widget_accessible` | `bool` | `True` | Whether the widget is accessible to users |
+| `widget_description` | `Optional[str]` | `None` | Extended widget description for ChatGPT providing additional context |
+| `widget_csp` | `Optional[Dict[str, List[str]]]` | `None` | Content Security Policy configuration. Controls which domains the widget can access. Format: `{"connect_domains": [...], "resource_domains": [...]}` |
+| `widget_prefers_border` | `bool` | `False` | Whether to show a border around the widget |
+| `read_only` | `bool` | `True` | Whether the widget is read-only |
+
+**Content Security Policy (`widget_csp`) Example:**
+```python
+widget_csp = {
+    "connect_domains": ["https://api.example.com"],  # For fetch/API calls
+    "resource_domains": ["https://cdn.example.com"]   # For images, fonts, etc
+}
+```
+
+#### Required Method
+
+**`async execute(input_data: BaseModel) -> Dict[str, Any]`**
+
+This is the core method where you implement your widget's logic:
+- **Parameters**: `input_data` - An instance of your `input_schema` with validated data
+- **Returns**: A dictionary containing data to pass to your React component
+- **Must be async**: Use `async def` even if you don't await anything
+
+Example:
+```python
+async def execute(self, input_data: MyInput) -> Dict[str, Any]:
+    # Your logic here
+    result = await some_async_operation()
+    return {
+        "message": "Success!",
+        "data": result
+    }
+```
+
+### ConfigDict
+
+`ConfigDict` is a **Pydantic configuration helper** used to configure how your input models behave. In FastApps, it's essential for handling field name conversions between Python (snake_case) and JavaScript/ChatGPT (camelCase).
+
+#### Why You Need It
+
+When you define a Pydantic model for your widget inputs, you should always include:
+
+```python
+class MyInput(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+```
+
+The `populate_by_name=True` setting allows the model to accept fields by **both** their original name and their alias. This is crucial for interoperability between:
+- Python backend (snake_case: `user_name`)
+- JavaScript frontend (camelCase: `userName`)
+
+#### Example with Field Aliases
+
+```python
+from fastapps import BaseWidget, Field, ConfigDict
+from pydantic import BaseModel
+
+class UserInput(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    
+    # Python uses snake_case, ChatGPT sends camelCase
+    user_name: str = Field(default="", alias="userName")
+    first_name: str = Field(default="", alias="firstName")
+    email_address: str = Field(default="", alias="emailAddress")
+```
+
+With this configuration:
+- ChatGPT can send `{"userName": "john", "firstName": "John"}`
+- Python receives it as `input_data.user_name` and `input_data.first_name`
+
 ## Basic Tool Structure
 
 ```python
@@ -26,12 +117,20 @@ class GreetingInput(BaseModel):
     name: str = Field(..., description="Person to greet")
 
 # 2. Implement tool
-class GreetingWidget(BaseWidget):
+class GreetingTool(BaseWidget):
     identifier = "greeting"
-    input_model = GreetingInput
+    title = "Greeting Widget"
+    input_schema = GreetingInput
+    invoking = "Preparing greeting..."
+    invoked = "Greeting ready!"
+    
+    widget_csp = {
+        "connect_domains": [],
+        "resource_domains": []
+    }
 
-    def execute(self, inputs: GreetingInput) -> Dict[str, Any]:
-        return {"message": f"Hello {inputs.name}!"}
+    async def execute(self, input_data: GreetingInput) -> Dict[str, Any]:
+        return {"message": f"Hello {input_data.name}!"}
 ```
 
 ## Input Validation
@@ -42,21 +141,51 @@ class GreetingWidget(BaseWidget):
 
 ## Accessing External Services
 
+When your widget needs to call external APIs, make sure to:
+1. Include the API domain in `widget_csp["connect_domains"]`
+2. Use `async`/`await` for network requests
+3. Handle errors gracefully
+
 ```python
 import httpx
+from pydantic import BaseModel
 
-class WeatherWidget(BaseWidget):
+class WeatherInput(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    city: str = Field(..., description="City name")
+
+class WeatherTool(BaseWidget):
     identifier = "weather"
-    input_model = WeatherInput
+    title = "Weather Widget"
+    input_schema = WeatherInput
+    invoking = "Fetching weather data..."
+    invoked = "Weather data ready!"
+    
+    # Allow API access
+    widget_csp = {
+        "connect_domains": ["https://api.weatherapi.com"],
+        "resource_domains": []
+    }
 
-    async def execute(self, inputs: WeatherInput) -> Dict[str, Any]:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://api.weatherapi.com/v1/current.json",
-                params={"q": inputs.city},
-            )
-        data = response.json()
-        return {"city": inputs.city, "forecast": data["current"]}
+    async def execute(self, input_data: WeatherInput) -> Dict[str, Any]:
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    "https://api.weatherapi.com/v1/current.json",
+                    params={"q": input_data.city, "key": "YOUR_API_KEY"},
+                )
+                response.raise_for_status()
+            data = response.json()
+            return {
+                "city": input_data.city,
+                "temperature": data["current"]["temp_c"],
+                "condition": data["current"]["condition"]["text"]
+            }
+        except Exception as e:
+            return {
+                "error": str(e),
+                "city": input_data.city
+            }
 ```
 
 ## Returning Data
@@ -65,9 +194,164 @@ class WeatherWidget(BaseWidget):
 - Stick to JSON-serializable data types
 - Provide friendly defaults (`[]`, `{}`, etc.) when data is missing
 
+## Complete Example
+
+Here's a full example showing all the features of `BaseWidget` and `ConfigDict`:
+
+```python
+from fastapps import BaseWidget, Field, ConfigDict
+from pydantic import BaseModel
+from typing import Dict, Any, Optional
+import httpx
+
+class GitHubRepoInput(BaseModel):
+    """Input schema with validation and field aliases"""
+    model_config = ConfigDict(populate_by_name=True)
+    
+    repo_name: str = Field(
+        ...,
+        alias="repoName",
+        description="GitHub repository in format: owner/repo",
+        pattern=r"^[\w-]+/[\w-]+$"
+    )
+    include_stats: bool = Field(
+        default=True,
+        alias="includeStats",
+        description="Include repository statistics"
+    )
+
+class GitHubRepoTool(BaseWidget):
+    """Widget that fetches GitHub repository information"""
+    
+    # Required attributes
+    identifier = "github_repo"
+    title = "GitHub Repository Viewer"
+    input_schema = GitHubRepoInput
+    description = "Display GitHub repository information with stats"
+    invoking = "Fetching repository data..."
+    invoked = "Repository loaded!"
+    
+    # Optional attributes
+    widget_accessible = True
+    widget_description = "View detailed information about any public GitHub repository"
+    widget_prefers_border = True
+    read_only = True
+    
+    # Content Security Policy
+    widget_csp = {
+        "connect_domains": [
+            "https://api.github.com",
+            "https://github.com"
+        ],
+        "resource_domains": [
+            "https://avatars.githubusercontent.com"  # For profile images
+        ]
+    }
+    
+    async def execute(self, input_data: GitHubRepoInput) -> Dict[str, Any]:
+        """
+        Fetch repository data from GitHub API
+        
+        Returns:
+            Dict containing repository information for the React component
+        """
+        try:
+            # Make API request
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"https://api.github.com/repos/{input_data.repo_name}",
+                    headers={"Accept": "application/vnd.github.v3+json"}
+                )
+                response.raise_for_status()
+            
+            repo_data = response.json()
+            
+            # Prepare response data
+            result = {
+                "success": True,
+                "name": repo_data["name"],
+                "full_name": repo_data["full_name"],
+                "description": repo_data.get("description", "No description"),
+                "owner": {
+                    "name": repo_data["owner"]["login"],
+                    "avatar": repo_data["owner"]["avatar_url"]
+                },
+                "url": repo_data["html_url"],
+                "homepage": repo_data.get("homepage", ""),
+                "language": repo_data.get("language", "Unknown"),
+            }
+            
+            # Include stats if requested
+            if input_data.include_stats:
+                result["stats"] = {
+                    "stars": repo_data["stargazers_count"],
+                    "forks": repo_data["forks_count"],
+                    "watchers": repo_data["watchers_count"],
+                    "open_issues": repo_data["open_issues_count"],
+                    "created_at": repo_data["created_at"],
+                    "updated_at": repo_data["updated_at"],
+                }
+            
+            return result
+            
+        except httpx.HTTPStatusError as e:
+            # Handle HTTP errors
+            return {
+                "success": False,
+                "error": f"GitHub API error: {e.response.status_code}",
+                "message": "Repository not found or API rate limit exceeded"
+            }
+        except Exception as e:
+            # Handle other errors
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to fetch repository data"
+            }
+```
+
+This example demonstrates:
+- ✅ Complete `BaseWidget` implementation with all attributes
+- ✅ `ConfigDict` with `populate_by_name=True` for field alias support
+- ✅ Field validation with patterns and descriptions
+- ✅ Content Security Policy for API and image access
+- ✅ Async/await for external API calls
+- ✅ Comprehensive error handling
+- ✅ Conditional data based on input parameters
+- ✅ Type hints for better IDE support
+
 ## Best Practices
 
-- Keep business logic in the tool; keep widgets focused on presentation
+**Structure & Organization:**
+- Keep business logic in the tool; keep React widgets focused on presentation
 - Extract API clients or reusable logic into `server/api/`
-- Use async `execute` when calling network resources
-- Log errors and return safe fallbacks to the widget
+- Use descriptive class and variable names
+
+**Async & Performance:**
+- Always use `async def` for the `execute()` method
+- Use `async`/`await` when calling network resources
+- Consider caching for expensive operations
+
+**Error Handling:**
+- Always wrap external API calls in try/except blocks
+- Return error information to the widget (don't raise exceptions)
+- Provide friendly error messages for users
+- Log errors for debugging
+
+**Input Validation:**
+- Use Pydantic Field constraints (pattern, ge, le, etc.)
+- Always include `ConfigDict(populate_by_name=True)`
+- Provide descriptions for all fields to help ChatGPT
+- Use meaningful field aliases for camelCase compatibility
+
+**Security:**
+- Always specify `widget_csp` with required domains
+- Never hardcode API keys (use environment variables)
+- Validate and sanitize all user inputs
+- Be cautious with `connect_domains` and `resource_domains`
+
+**Data Return:**
+- Return dictionaries that match your React component's expected props
+- Stick to JSON-serializable data types (str, int, float, bool, list, dict)
+- Provide sensible defaults (`[]`, `{}`, `""`) when data is missing
+- Include success/error flags for better error handling in the UI
