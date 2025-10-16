@@ -38,6 +38,9 @@ A tool is a Python class that:
 | `widget_description` | `Optional[str]` | `None` | Description shown **to the model** when the component is rendered. Helps the model understand what's being displayed to avoid redundant content in its response. Maps to `openai/widgetDescription`. Example: `"Renders an interactive calendar showing the user's appointments"` |
 | `widget_csp` | `Optional[Dict[str, List[str]]]` | `None` | **Content Security Policy** defining which domains your component can access. Required for production distribution. Format: `{"connect_domains": [...], "resource_domains": [...]}`. See below for details |
 | `widget_prefers_border` | `bool` | `False` | Whether ChatGPT should render a border around the widget for a "Card" layout. Maps to `openai/widgetPrefersBorder` |
+| `widget_domain` | `Optional[str]` | `None` | Configures a dedicated subdomain for your widget. Use this for components that need to access APIs with origin/referrer restrictions (e.g., Google Maps). Maps to `openai/widgetDomain`. Example: `"https://chatgpt.com"` becomes `https://chatgpt-com.web-sandbox.oaiusercontent.com` |
+| `supported_locales` | `Optional[List[str]]` | `None` | List of locale codes your widget supports (IETF BCP 47 format). Examples: `["en", "en-US", "es", "fr-FR", "es-419"]`. Server will negotiate best match with client's preferred locale |
+| `default_locale` | `str` | `"en"` | Default locale to use when client's requested locale is not supported |
 | `read_only` | `bool` | `True` | Hint that this tool is read-only and doesn't modify server state. Used for optimization and UX |
 
 **Content Security Policy (`widget_csp`) Details:**
@@ -67,12 +70,17 @@ These map to the following CSP directives:
 
 #### Required Method
 
-**`async execute(input_data: BaseModel) -> Dict[str, Any]`**
+**`async execute(input_data: BaseModel, context: Optional[ClientContext] = None) -> Dict[str, Any]`**
 
 This is the core method where you implement your tool's logic and return data to hydrate your component.
 
 **Parameters:**
 - `input_data`: An instance of your `input_schema` with validated parameters from ChatGPT
+- `context`: Optional `ClientContext` object containing:
+  - `context.locale` - User's preferred locale (IETF BCP 47 format, e.g., 'en-US', 'fr-FR')
+  - `context.user_agent` - Client user agent string (e.g., 'ChatGPT/1.2025.012')
+  - `context.user_location` - Coarse location data (country, region, city, timezone, coordinates)
+  - `context.raw_meta` - Full `_meta` dictionary from the MCP request
 
 **Returns:**
 A dictionary that is injected into your component as `window.openai.toolOutput`. This data:
@@ -86,15 +94,20 @@ Always use `async def` even if you don't have any `await` calls inside.
 
 **Example:**
 ```python
-async def execute(self, input_data: MyInput) -> Dict[str, Any]:
+async def execute(self, input_data: MyInput, context: Optional[ClientContext] = None) -> Dict[str, Any]:
     # Fetch data from your backend/API
     result = await some_async_operation()
+    
+    # Access client context if provided
+    locale = context.locale if context else self.default_locale
+    user_agent = context.user_agent if context else None
     
     # Return structured data for your component
     return {
         "message": "Success!",
         "data": result,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "locale": locale
     }
 ```
 
@@ -351,6 +364,166 @@ This example demonstrates:
 - ✅ Comprehensive error handling
 - ✅ Conditional data based on input parameters
 - ✅ Type hints for better IDE support
+
+## Advanced Features
+
+### Configuring Widget Domains
+
+If you have public API keys (e.g., Google Maps API) that need to be restricted to specific origins or referrers, you can configure a dedicated subdomain for your widget:
+
+```python
+class MapWidgetTool(BaseWidget):
+    identifier = "map_widget"
+    title = "Map Widget"
+    input_schema = MapInput
+    invoking = "Loading map..."
+    invoked = "Map ready!"
+    
+    # Configure dedicated subdomain
+    widget_domain = "https://chatgpt.com"
+    
+    widget_csp = {
+        "connect_domains": ["https://maps.googleapis.com"],
+        "resource_domains": ["https://maps.googleapis.com"]
+    }
+    
+    async def execute(self, input_data: MapInput, context=None) -> Dict[str, Any]:
+        return {"location": input_data.location}
+```
+
+**How it works:**
+- Since we can't support dynamic dual-level subdomains, FastApps converts the origin `chatgpt.com` to `chatgpt-com`
+- Your widget is rendered at `https://chatgpt-com.web-sandbox.oaiusercontent.com`
+- These domains are unique to each partner
+- Note: Browser cookies are still not permitted, even with dedicated subdomains
+
+**Benefits:**
+- Enables ChatGPT punchout button in desktop fullscreen view
+- Allows you to restrict API access by origin/referrer for security
+
+### Serving Localized Content
+
+FastApps supports automatic locale negotiation following IETF BCP 47 standards (e.g., `en-US`, `fr-FR`, `es-419`).
+
+#### Define Supported Locales
+
+```python
+from fastapps import BaseWidget, ClientContext
+from typing import Optional
+
+class MultilingualTool(BaseWidget):
+    identifier = "multilingual"
+    title = "Multilingual Widget"
+    input_schema = MyInput
+    invoking = "Loading..."
+    invoked = "Ready!"
+    
+    # Define supported locales
+    supported_locales = ["en", "en-US", "es", "es-419", "fr-FR", "de"]
+    default_locale = "en"
+    
+    widget_csp = {
+        "connect_domains": [],
+        "resource_domains": []
+    }
+    
+    async def execute(self, input_data: MyInput, context: Optional[ClientContext] = None) -> Dict[str, Any]:
+        # Access negotiated locale
+        locale = context.locale if context else self.default_locale
+        
+        # Localize your response
+        messages = {
+            "en": "Hello, World!",
+            "es": "¡Hola, Mundo!",
+            "fr": "Bonjour, le monde!",
+            "de": "Hallo, Welt!"
+        }
+        
+        # Get language-only code for fallback
+        lang = locale.split('-')[0]
+        message = messages.get(locale) or messages.get(lang) or messages["en"]
+        
+        return {
+            "message": message,
+            "locale": locale
+        }
+```
+
+#### Locale Negotiation Process
+
+1. **During MCP Initialize**: Client sends preferred locale in `_meta["openai/locale"]` (or `_meta["webplus/i18n"]` for older clients)
+2. **Server Negotiates**: FastApps uses RFC 4647 lookup rules to find the best match:
+   - Exact match (e.g., `fr-FR` matches `fr-FR`)
+   - Language-only match (e.g., `fr` for requested `fr-FR`)
+   - Any locale with matching language (e.g., `fr-CA` for requested `fr-FR`)
+   - Falls back to `default_locale` if no match
+3. **Server Responds**: FastApps echoes the resolved locale in `_meta["openai/locale"]`
+4. **Every Request**: The resolved locale is repeated in subsequent requests
+
+**Best Practices for Localization:**
+- Support at least `en` (English) as a fallback
+- Use the locale for formatting numbers, dates, currency
+- Translate only server-side strings (status messages, error messages)
+- Store resolved locale with session context
+- Test with MCP Inspector by setting different `_meta["openai/locale"]` values
+
+### Accessing Client Context
+
+The `ClientContext` object provides access to client hints and user information:
+
+```python
+from fastapps import BaseWidget, ClientContext
+from typing import Optional
+
+class ContextAwareTool(BaseWidget):
+    identifier = "context_aware"
+    title = "Context Aware Widget"
+    input_schema = MyInput
+    invoking = "Processing..."
+    invoked = "Done!"
+    
+    widget_csp = {
+        "connect_domains": [],
+        "resource_domains": []
+    }
+    
+    async def execute(self, input_data: MyInput, context: Optional[ClientContext] = None) -> Dict[str, Any]:
+        if not context:
+            return {"message": "No context available"}
+        
+        # Access client information
+        user_agent = context.user_agent  # e.g., "ChatGPT/1.2025.012"
+        location = context.user_location  # Dict with country, region, city, timezone
+        locale = context.locale  # e.g., "en-US"
+        
+        # Build response based on context
+        result = {
+            "message": f"Request from {locale}",
+            "client": user_agent,
+        }
+        
+        # Add location info if available
+        if location:
+            result["country"] = location.get("country", "Unknown")
+            result["timezone"] = location.get("timezone", "Unknown")
+        
+        return result
+```
+
+**Available Context Properties:**
+
+| Property | Type | Description | Example |
+|----------|------|-------------|---------|
+| `context.locale` | `Optional[str]` | User's preferred locale (IETF BCP 47) | `"en-US"`, `"fr-FR"`, `"es-419"` |
+| `context.user_agent` | `Optional[str]` | Client user agent string | `"ChatGPT/1.2025.012"` |
+| `context.user_location` | `Optional[Dict]` | Coarse location data (country, region, city, timezone, coordinates) | `{"country": "US", "timezone": "America/New_York"}` |
+| `context.raw_meta` | `Dict[str, Any]` | Full `_meta` dictionary from MCP request | `{"openai/locale": "en-US", ...}` |
+
+**Important Notes:**
+- Treat these values as **advisory only** – never use them for authorization
+- They're useful for tailoring formatting, regional content, or analytics
+- Clients may omit any field at any time
+- When logging, sanitize before sharing outside the service perimeter
 
 ## Best Practices
 
