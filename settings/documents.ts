@@ -87,6 +87,10 @@ export const Documents: DocumentPaths[] = [
     href: "/state",
   },
   {
+    title: "Auth",
+    href: "/auth",
+  },
+  {
     title: "Styling Guide",
     href: "/styling",
   },

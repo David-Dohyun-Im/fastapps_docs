@@ -1,0 +1,45 @@
+---
+title: Auth
+description: Authentication features for FastApps widgets and tools.
+---
+
+# Authentication
+
+Authentication features for FastApps are coming soon!
+
+We're working on adding powerful authentication capabilities with simple decorators like `@auth_required`.
+
+## Coming Soon
+
+In the next few days, we'll be adding:
+
+- **Simple Decorators**: Use `@auth_required` to protect your widgets and tools
+- **Multiple Auth Providers**: Support for various authentication methods
+- **Session Management**: Automatic session handling and validation
+- **User Context**: Access to authenticated user information in your widgets
+
+## Preview
+
+Here's a preview of how authentication will work:
+
+```python
+from fastapps import BaseWidget, auth_required
+
+@auth_required
+class ProtectedWidget(BaseWidget):
+    identifier = "protected-widget"
+    title = "Protected Widget"
+    
+    async def execute(self, input_data, user_context):
+        # user_context contains authenticated user info
+        return {
+            "message": f"Hello, {user_context.name}!",
+            "user_id": user_context.id
+        }
+```
+
+## Stay Tuned
+
+Keep an eye on our updates - authentication features will be available very soon!
+
+For now, you can build widgets without authentication. When the auth features are ready, existing widgets will continue to work, and you'll be able to add authentication with just a simple decorator.
