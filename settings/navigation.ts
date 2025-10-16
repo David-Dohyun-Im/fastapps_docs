@@ -9,6 +9,10 @@ export const Navigations: Array<{
     title: "Docs",
     href: `/docs${PageRoutes[0].href}`,
   },
+  {
+    title: "Blog",
+    href: "/blog",
+  },
 ]
 
 export const GitHubLink = {
