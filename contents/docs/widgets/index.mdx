@@ -17,7 +17,7 @@ A widget is a React component that:
 
 ```jsx
 import React from "react";
-import { useWidgetProps } from "chatjs-hooks";
+import { useWidgetProps } from "fastapps";
 
 export default function MyWidget() {
   // 1. Get data from Python backend
@@ -54,7 +54,7 @@ export default function PizzaList() {
 ## Pattern: User Input
 
 ```jsx
-import { useWidgetState } from "chatjs-hooks";
+import { useWidgetState } from "fastapps";
 
 export default function TodoWidget() {
   const [todos, setTodos] = useWidgetState("todos", []);
@@ -115,7 +115,7 @@ export default function WeatherWidget() {
 Access data returned from your Python tool's `execute()` method.
 
 ```tsx
-import { useWidgetProps } from 'chatjs-hooks';
+import { useWidgetProps } from 'fastapps';
 
 interface MyWidgetProps {
   message: string;
@@ -152,7 +152,7 @@ export default function MyWidget() {
 Manage persistent state that survives across ChatGPT sessions.
 
 ```tsx
-import { useWidgetState } from 'chatjs-hooks';
+import { useWidgetState } from 'fastapps';
 
 export default function Counter() {
   const [state, setState] = useWidgetState({ count: 0 });
@@ -203,7 +203,7 @@ setState({
 Access ChatGPT environment information like theme, layout, and locale.
 
 ```tsx
-import { useOpenAiGlobal } from 'chatjs-hooks';
+import { useOpenAiGlobal } from 'fastapps';
 
 export default function ThemedWidget() {
   const theme = useOpenAiGlobal('theme');
@@ -417,7 +417,7 @@ Here's a comprehensive example using all features:
 
 ```tsx
 import React from 'react';
-import { useWidgetProps, useWidgetState, useOpenAiGlobal } from 'chatjs-hooks';
+import { useWidgetProps, useWidgetState, useOpenAiGlobal } from 'fastapps';
 
 interface Place {
   id: string;
@@ -580,7 +580,7 @@ import type {
   DisplayMode,
   UserAgent,
   SafeArea 
-} from 'chatjs-hooks';
+} from 'fastapps';
 
 // Strongly typed props
 interface MyProps {

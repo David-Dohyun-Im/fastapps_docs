@@ -37,7 +37,7 @@ Create `widgets/greeting/index.jsx`:
 
 ```jsx
 import React from "react";
-import { useWidgetProps } from "chatjs-hooks";
+import { useWidgetProps } from "fastapps";
 
 export default function GreetingWidget() {
   const props = useWidgetProps();
@@ -88,7 +88,7 @@ class PizzaWidget(BaseWidget):
 
 ```jsx
 import React from "react";
-import { useWidgetProps } from "chatjs-hooks";
+import { useWidgetProps } from "fastapps";
 
 export default function PizzaList() {
   const { city, pizzas } = useWidgetProps();
@@ -113,7 +113,7 @@ export default function PizzaList() {
 Add a search box with widget state:
 
 ```jsx
-import { useWidgetProps, useWidgetState } from "chatjs-hooks";
+import { useWidgetProps, useWidgetState } from "fastapps";
 
 export default function PizzaList() {
   const { city, pizzas } = useWidgetProps();
