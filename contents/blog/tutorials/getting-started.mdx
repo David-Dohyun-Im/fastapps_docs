@@ -1,0 +1,134 @@
+---
+title: "Getting Started Guide: Build Your First App in 5 Minutes"
+description: "A comprehensive guide to help you build and deploy your first application quickly and efficiently."
+date: "2025-01-20"
+author:
+  name: "Jane Smith"
+  image: ""
+category: "tutorials"
+tags: ["tutorial", "getting-started", "beginner", "quickstart"]
+image: "/images/banner.svg"
+published: true
+---
+
+# Getting Started: Build Your First App
+
+Welcome to our comprehensive getting started guide! In this tutorial, we'll walk you through building your first application from scratch. By the end of this guide, you'll have a fully functional app up and running.
+
+## Prerequisites
+
+Before we begin, make sure you have:
+
+- Node.js 18.x or higher installed
+- Basic knowledge of JavaScript/TypeScript
+- A code editor (we recommend VS Code)
+- Git installed on your machine
+
+## Step 1: Installation
+
+First, let's install our CLI tool:
+
+```bash
+npm install -g fastapps-cli
+```
+
+Verify the installation:
+
+```bash
+fastapps --version
+```
+
+## Step 2: Create Your Project
+
+Create a new project using our CLI:
+
+```bash
+fastapps create my-first-app
+cd my-first-app
+```
+
+This will scaffold a new project with all the necessary files and dependencies.
+
+## Step 3: Project Structure
+
+Your project structure should look like this:
+
+```
+my-first-app/
+├── src/
+│   ├── app/
+│   ├── components/
+│   └── lib/
+├── public/
+├── package.json
+└── README.md
+```
+
+## Step 4: Start Development Server
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Your app will be available at `http://localhost:3000`.
+
+## Step 5: Make Your First Changes
+
+Open `src/app/page.tsx` and modify the content:
+
+```tsx
+export default function Home() {
+  return (
+    <div>
+      <h1>Hello, World!</h1>
+      <p>This is my first app!</p>
+    </div>
+  )
+}
+```
+
+Save the file and watch your changes appear instantly in the browser!
+
+## Step 6: Deploy Your App
+
+When you're ready to deploy:
+
+```bash
+npm run build
+npm run deploy
+```
+
+Congratulations! 🎉 You've just built and deployed your first app.
+
+## Next Steps
+
+Now that you have your first app running, here are some things to explore next:
+
+1. **Add Components**: Learn how to create reusable components
+2. **State Management**: Understand how to manage application state
+3. **Styling**: Customize your app's appearance
+4. **API Integration**: Connect to external APIs
+
+## Troubleshooting
+
+### Common Issues
+
+**Port already in use:**
+```bash
+npm run dev -- -p 3001
+```
+
+**Installation errors:**
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## Conclusion
+
+You've successfully created your first app! This is just the beginning of your journey. Check out our other tutorials to learn more advanced concepts.
+
+Happy coding! 🚀
+
