@@ -23,50 +23,82 @@ A tool is a Python class that:
 
 | Attribute | Type | Description | Example |
 |-----------|------|-------------|---------|
-| `identifier` | `str` | Unique widget identifier. Must match the widget folder name in `widgets/` | `"greeting"` for `widgets/greeting/` |
-| `title` | `str` | Human-readable widget name displayed in ChatGPT interface | `"Greeting Widget"` |
-| `input_schema` | `Type[BaseModel]` | Pydantic model defining widget input parameters. Used for validation and ChatGPT suggestions | `GreetingInput` |
-| `invoking` | `str` | Message shown while the widget is loading | `"Preparing your greeting..."` |
-| `invoked` | `str` | Message shown when the widget is ready | `"Greeting ready!"` |
+| `identifier` | `str` | Unique widget identifier. Must match the widget folder name in `widgets/`. Used as the resource URI identifier | `"greeting"` for `widgets/greeting/` |
+| `title` | `str` | Human-readable tool name displayed in ChatGPT interface. Shown when the model considers calling this tool | `"Show Greeting Widget"` |
+| `input_schema` | `Type[BaseModel]` | Pydantic model defining the tool's input parameters. ChatGPT uses this JSON schema to understand when and how to call your tool | `GreetingInput` |
+| `invoking` | `str` | Short, localized status message shown to users **while** the tool is being executed. Maps to `openai/toolInvocation/invoking` | `"Preparing your greeting…"` |
+| `invoked` | `str` | Short, localized status message shown to users **after** the tool completes. Maps to `openai/toolInvocation/invoked` | `"Greeting ready!"` |
 
 #### Optional Class Attributes
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `description` | `str` | `""` | Additional widget description |
-| `widget_accessible` | `bool` | `True` | Whether the widget is accessible to users |
-| `widget_description` | `Optional[str]` | `None` | Extended widget description for ChatGPT providing additional context |
-| `widget_csp` | `Optional[Dict[str, List[str]]]` | `None` | Content Security Policy configuration. Controls which domains the widget can access. Format: `{"connect_domains": [...], "resource_domains": [...]}` |
-| `widget_prefers_border` | `bool` | `False` | Whether to show a border around the widget |
-| `read_only` | `bool` | `True` | Whether the widget is read-only |
+| `description` | `str` | `""` | Tool description that helps the model understand when to use this tool |
+| `widget_accessible` | `bool` | `True` | Whether the component can initiate tool calls back to the server. Set to `true` to allow component-initiated tool access. Maps to `openai/widgetAccessible` |
+| `widget_description` | `Optional[str]` | `None` | Description shown **to the model** when the component is rendered. Helps the model understand what's being displayed to avoid redundant content in its response. Maps to `openai/widgetDescription`. Example: `"Renders an interactive calendar showing the user's appointments"` |
+| `widget_csp` | `Optional[Dict[str, List[str]]]` | `None` | **Content Security Policy** defining which domains your component can access. Required for production distribution. Format: `{"connect_domains": [...], "resource_domains": [...]}`. See below for details |
+| `widget_prefers_border` | `bool` | `False` | Whether ChatGPT should render a border around the widget for a "Card" layout. Maps to `openai/widgetPrefersBorder` |
+| `read_only` | `bool` | `True` | Hint that this tool is read-only and doesn't modify server state. Used for optimization and UX |
 
-**Content Security Policy (`widget_csp`) Example:**
+**Content Security Policy (`widget_csp`) Details:**
+
+The CSP controls which external resources your component can access. It defines two arrays:
+
 ```python
 widget_csp = {
-    "connect_domains": ["https://api.example.com"],  # For fetch/API calls
-    "resource_domains": ["https://cdn.example.com"]   # For images, fonts, etc
+    "connect_domains": [
+        "https://api.example.com",      # Domains for fetch/API calls (connect-src)
+        "https://analytics.example.com"
+    ],
+    "resource_domains": [
+        "https://cdn.example.com",      # Domains for images, fonts, stylesheets
+        "https://fonts.googleapis.com"  # (script-src, img-src, font-src)
+    ]
 }
 ```
+
+These map to the following CSP directives:
+- `script-src 'self' ${resource_domains}`
+- `img-src 'self' data: ${resource_domains}`
+- `font-src 'self' ${resource_domains}`
+- `connect-src 'self' ${connect_domains}`
+
+**Important:** A strict CSP is required for broad distribution in ChatGPT and will be inspected during the MCP review process.
 
 #### Required Method
 
 **`async execute(input_data: BaseModel) -> Dict[str, Any]`**
 
-This is the core method where you implement your widget's logic:
-- **Parameters**: `input_data` - An instance of your `input_schema` with validated data
-- **Returns**: A dictionary containing data to pass to your React component
-- **Must be async**: Use `async def` even if you don't await anything
+This is the core method where you implement your tool's logic and return data to hydrate your component.
 
-Example:
+**Parameters:**
+- `input_data`: An instance of your `input_schema` with validated parameters from ChatGPT
+
+**Returns:**
+A dictionary that is injected into your component as `window.openai.toolOutput`. This data:
+- **Hydrates your React component** with the information it needs to render
+- **Is visible to the ChatGPT model**, which can narrate or summarize the values
+- Should be **JSON-serializable** (strings, numbers, booleans, lists, dicts)
+- Should be **scoped to what your UI needs** – keep it concise for better model performance
+
+**Must be async:**
+Always use `async def` even if you don't have any `await` calls inside.
+
+**Example:**
 ```python
 async def execute(self, input_data: MyInput) -> Dict[str, Any]:
-    # Your logic here
+    # Fetch data from your backend/API
     result = await some_async_operation()
+    
+    # Return structured data for your component
     return {
         "message": "Success!",
-        "data": result
+        "data": result,
+        "timestamp": datetime.now().isoformat()
     }
 ```
+
+**Important:** The returned dictionary is passed to your React component via `useWidgetProps()` and is also visible to the ChatGPT model.
 
 ### ConfigDict
 
@@ -225,17 +257,17 @@ class GitHubRepoTool(BaseWidget):
     
     # Required attributes
     identifier = "github_repo"
-    title = "GitHub Repository Viewer"
+    title = "Show GitHub Repository"
     input_schema = GitHubRepoInput
-    description = "Display GitHub repository information with stats"
-    invoking = "Fetching repository data..."
-    invoked = "Repository loaded!"
+    description = "Displays detailed information about a GitHub repository including stats, description, and metadata"
+    invoking = "Fetching repository data…"
+    invoked = "Repository loaded"
     
     # Optional attributes
-    widget_accessible = True
-    widget_description = "View detailed information about any public GitHub repository"
-    widget_prefers_border = True
-    read_only = True
+    widget_accessible = False  # Set to True only if component needs to call tools
+    widget_description = "Renders an interactive card showing GitHub repository information including name, description, stars, forks, and programming language"
+    widget_prefers_border = True  # Renders better as a card
+    read_only = True  # This tool doesn't modify server state
     
     # Content Security Policy
     widget_csp = {
@@ -340,18 +372,32 @@ This example demonstrates:
 
 **Input Validation:**
 - Use Pydantic Field constraints (pattern, ge, le, etc.)
-- Always include `ConfigDict(populate_by_name=True)`
-- Provide descriptions for all fields to help ChatGPT
+- Always include `ConfigDict(populate_by_name=True)` in your input models
+- Provide clear descriptions for all fields to help ChatGPT understand when to use your tool
 - Use meaningful field aliases for camelCase compatibility
 
 **Security:**
-- Always specify `widget_csp` with required domains
+- **Always specify `widget_csp`** with only the domains you need
+- A strict CSP is required for production distribution and will be inspected during MCP review
 - Never hardcode API keys (use environment variables)
 - Validate and sanitize all user inputs
-- Be cautious with `connect_domains` and `resource_domains`
+- Be conservative with `connect_domains` and `resource_domains` – only include necessary domains
 
 **Data Return:**
-- Return dictionaries that match your React component's expected props
+- Return dictionaries scoped to what your UI needs – keep payloads concise
+- Remember: the data is **visible to the ChatGPT model**, which may narrate it
+- Use `widget_description` to tell the model what's being displayed, reducing redundant responses
 - Stick to JSON-serializable data types (str, int, float, bool, list, dict)
 - Provide sensible defaults (`[]`, `{}`, `""`) when data is missing
 - Include success/error flags for better error handling in the UI
+
+**Status Messages:**
+- Keep `invoking` and `invoked` messages short and user-friendly
+- Use present progressive for `invoking`: "Fetching data…", "Loading board…"
+- Use past tense or present for `invoked`: "Data ready!", "Board loaded"
+
+**Widget Behavior:**
+- Set `widget_accessible=True` only if your component needs to initiate tool calls
+- Use `widget_description` to help the model understand what's displayed
+- Set `widget_prefers_border=True` for components that work better in a "Card" layout
+- Mark tools as `read_only=True` if they don't modify server state
