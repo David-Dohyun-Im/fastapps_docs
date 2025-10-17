@@ -79,11 +79,40 @@ if (props.error) {
 }
 ```
 
-## Authentication
+## API Authentication
+
+### Environment Variables for API Keys
 
 - Use environment variables for API keys
 - Load them in Python with `os.getenv`
 - Never expose secrets in the widget props
+
+```python
+import os
+
+class APIWidget(BaseWidget):
+    async def execute(self, inputs):
+        api_key = os.getenv("EXTERNAL_API_KEY")
+        # Use api_key in your request
+```
+
+### User Authentication
+
+For user-specific API calls, see the [Authentication](/docs/auth) guide to learn how to:
+- Protect widgets with `@auth_required`
+- Access user information via `UserContext`
+- Make authenticated requests with user data
+
+```python
+from fastapps import BaseWidget, auth_required, UserContext
+
+@auth_required(scopes=["user"])
+class UserAPIWidget(BaseWidget):
+    async def execute(self, inputs, context, user: UserContext):
+        # Access user information
+        user_id = user.subject
+        # Make user-specific API call
+```
 
 ## Rate Limits
 
@@ -95,3 +124,9 @@ if (props.error) {
 
 - Prefer async tools when calling APIs
 - For blocking libraries, run them in executors to keep FastApps responsive
+
+## Next Steps
+
+- [**Authentication**](/docs/auth) - Add OAuth authentication to your widgets
+- [**State Management**](/docs/state) - Manage widget state
+- [**Styling**](/docs/styling) - Style your widgets

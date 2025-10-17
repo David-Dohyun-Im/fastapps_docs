@@ -87,8 +87,39 @@ export const Documents: DocumentPaths[] = [
     href: "/state",
   },
   {
-    title: "Auth",
+    title: "Authentication",
     href: "/auth",
+    noLink: true,
+    items: [
+      {
+        title: "Server Configuration",
+        href: "/server-configuration",
+      },
+      {
+        title: "Widget Decorators",
+        href: "/decorators",
+      },
+      {
+        title: "User Context",
+        href: "/user-context",
+      },
+      {
+        title: "OAuth Providers",
+        href: "/providers",
+      },
+      {
+        title: "Advanced Topics",
+        href: "/advanced",
+      },
+      {
+        title: "Examples",
+        href: "/examples",
+      },
+      {
+        title: "Troubleshooting",
+        href: "/troubleshooting",
+      },
+    ],
   },
   {
     title: "Styling Guide",

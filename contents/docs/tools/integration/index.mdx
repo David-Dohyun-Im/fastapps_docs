@@ -431,8 +431,56 @@ class ConfigurableWidget(BaseWidget):
         pass
 ```
 
+## Authenticated API Calls
+
+When your widget requires authentication, you can access user context to make authenticated API calls:
+
+```python
+from fastapps import BaseWidget, auth_required, UserContext
+import aiohttp
+
+@auth_required(scopes=["user"])
+class AuthenticatedAPIWidget(BaseWidget):
+    identifier = "authenticated_api"
+    title = "Authenticated API Widget"
+    input_schema = AuthenticatedAPIInput
+    invoking = "Fetching user data…"
+    invoked = "Data retrieved!"
+
+    async def execute(self, inputs: AuthenticatedAPIInput, context, user: UserContext):
+        # Access authenticated user information
+        user_id = user.subject
+        user_email = user.claims.get('email')
+        
+        # Make API call with user-specific data
+        async with aiohttp.ClientSession() as session:
+            headers = {
+                "Authorization": f"Bearer {context.settings.get('API_KEY')}",
+                "X-User-ID": user_id,
+                "Content-Type": "application/json"
+            }
+            
+            async with session.get(
+                f"https://api.example.com/users/{user_id}/data",
+                headers=headers
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return {
+                        "user_id": user_id,
+                        "email": user_email,
+                        "data": data,
+                        "personalized": True
+                    }
+                else:
+                    raise Exception(f"API request failed: {response.status}")
+```
+
+Learn more about authentication in the [Authentication](/docs/auth) guide.
+
 ## Next Steps
 
+- [**Authentication**](/docs/auth) - Add OAuth authentication to your widgets
 - [**Back to Advanced Patterns**](/docs/tools/advanced)
 - [**Back to Tool Basics**](/docs/tools/basics)
 - [**Back to Tools Overview**](/docs/tools)
